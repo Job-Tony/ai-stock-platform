@@ -282,3 +282,42 @@ a {
   .trade-actions { flex-direction: column; }
 }
 
+/* =========================
+   CHATBOT STYLES
+   ========================= */
+.chatbot {
+  max-width: 720px;
+}
+
+.chat-window {
+  height: 260px;
+  overflow-y: auto;
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 18px;
+  border: 1px solid rgba(255,255,255,0.08);
+  text-align: left;
+}
+
+.user-msg {
+  margin-bottom: 10px;
+  color: #93c5fd;
+  font-weight: 500;
+}
+
+.bot-msg {
+  margin-bottom: 14px;
+  color: #a7f3d0;
+  line-height: 1.5;
+}
+
+.error-msg {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+.chat-input {
+  display: flex;
+  gap: 12px;
+}
