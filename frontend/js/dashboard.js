@@ -9,7 +9,8 @@ async function analyzeStock() {
     return;
   }
 
-  output.innerHTML = "Analyzing...";
+  // 🔄 SHOW LOADING SHIMMER
+  output.innerHTML = `<div class="loading"></div>`;
 
   try {
     const res = await fetch(`${API_BASE}/analyze/${symbol}`);
@@ -31,6 +32,6 @@ async function analyzeStock() {
     renderMeter(data.buy_score);
 
   } catch (err) {
-    output.innerHTML = "Error fetching data";
+    output.innerHTML = "❌ Error fetching data";
   }
 }
