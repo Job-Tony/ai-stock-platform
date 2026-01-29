@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Paper Trading</title>
+
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div class="container">
+
+    <h1>📄 Paper Trading</h1>
+    <p class="subtitle">
+      Simulate trades safely with virtual capital
+    </p>
+
+    <div class="card trade-card">
+
+      <input
+        id="tradeSymbol"
+        placeholder="Stock Symbol (AAPL)"
+        autocomplete="off"
+      />
+
+      <input
+        id="quantity"
+        type="number"
+        placeholder="Quantity"
+        min="1"
+      />
+
+      <input
+        id="price"
+        type="number"
+        step="0.01"
+        placeholder="Price"
+      />
+
+      <div class="trade-actions">
+        <button onclick="placeTrade('BUY')" class="buy">
+          BUY
+        </button>
+
+        <button onclick="placeTrade('SELL')" class="sell">
+          SELL
+        </button>
+      </div>
+
+    </div>
+
+    <div id="tradeResult" class="trade-result"></div>
+
+  </div>
+
+  <script src="js/trade.js"></script>
+</body>
+</html>

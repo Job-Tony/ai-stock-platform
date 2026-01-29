@@ -9,6 +9,7 @@
   --text-main: #e5e7eb;
   --text-muted: #94a3b8;
   --border-glass: rgba(255, 255, 255, 0.08);
+  --danger: #ef4444;
 }
 
 *,
@@ -29,7 +30,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow-x: hidden;
 }
 
 /* =========================
@@ -89,7 +90,44 @@ h1 {
 }
 
 /* =========================
-   PRIMARY BUTTON
+   INPUTS
+   ========================= */
+input {
+  width: 100%;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-main);
+  font-size: 0.95rem;
+}
+
+input::placeholder {
+  color: var(--text-muted);
+}
+
+input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.15);
+}
+
+/* =========================
+   CARDS (Dashboard / Trading)
+   ========================= */
+.card {
+  background: rgba(30, 41, 59, 0.75);
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  margin-top: 20px;
+}
+
+/* =========================
+   BUTTONS (GLOBAL)
    ========================= */
 button {
   position: relative;
@@ -97,7 +135,7 @@ button {
   border-radius: 12px;
   border: none;
   background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
+  color: #fff;
   font-size: 1rem;
   font-weight: 650;
   letter-spacing: 0.4px;
@@ -124,10 +162,48 @@ button:active {
 }
 
 /* =========================
+   BUY / SELL ACTIONS
+   ========================= */
+.trade-actions {
+  display: flex;
+  gap: 14px;
+  margin-top: 12px;
+}
+
+.buy {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+}
+
+.sell {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow:
+    0 10px 30px rgba(239, 68, 68, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.sell:hover {
+  box-shadow:
+    0 18px 45px rgba(239, 68, 68, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+/* =========================
+   RESULTS / MESSAGES
+   ========================= */
+.trade-result,
+#output {
+  margin-top: 18px;
+  font-weight: 600;
+  color: #a7f3d0;
+  text-align: center;
+}
+
+/* =========================
    LINKS
    ========================= */
 a {
   text-decoration: none;
+  color: inherit;
 }
 
 /* =========================
@@ -145,7 +221,7 @@ a {
 }
 
 /* =========================
-   RESPONSIVE POLISH
+   RESPONSIVE
    ========================= */
 @media (max-width: 520px) {
   h1 {
@@ -155,4 +231,9 @@ a {
   .container {
     padding: 38px 28px;
   }
+
+  .trade-actions {
+    flex-direction: column;
+  }
 }
+
