@@ -6,11 +6,13 @@ async function placeTrade(type) {
   const price = parseFloat(document.getElementById("price").value);
   const result = document.getElementById("tradeResult");
 
+  // Validation
   if (!symbol || !qty || !price) {
     result.innerHTML = "⚠️ Fill all fields";
     return;
   }
 
+  // Loading state
   result.innerHTML = "⏳ Placing trade...";
 
   const order = {
@@ -34,10 +36,13 @@ async function placeTrade(type) {
     const data = await res.json();
 
     result.innerHTML = `
-      <b>✅ Trade Executed</b>
-      <pre>${JSON.stringify(data, null, 2)}</pre>
+      <div class="trade-success">
+        <b>✅ Trade Executed</b>
+        <pre>${JSON.stringify(data, null, 2)}</pre>
+      </div>
     `;
   } catch (err) {
     result.innerHTML = "❌ Trade failed. Backend not reachable.";
   }
 }
+
