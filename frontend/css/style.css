@@ -20,6 +20,9 @@
   box-sizing: border-box;
 }
 
+/* =========================
+   BODY BACKGROUND
+   ========================= */
 body {
   min-height: 100vh;
   font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif;
@@ -34,7 +37,7 @@ body {
 }
 
 /* =========================
-   GLASS CARD CONTAINER
+   GLASS CONTAINER
    ========================= */
 .container {
   position: relative;
@@ -56,7 +59,7 @@ body {
   animation: fadeUp 0.9s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* subtle accent glow */
+/* Accent glow */
 .container::before {
   content: "";
   position: absolute;
@@ -79,7 +82,6 @@ h1 {
   font-size: 2.6rem;
   font-weight: 700;
   margin-bottom: 12px;
-  letter-spacing: 0.3px;
 }
 
 .subtitle {
@@ -95,9 +97,8 @@ h1 {
 input {
   width: 100%;
   padding: 14px 16px;
-  margin-bottom: 14px;
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255,255,255,0.15);
   background: rgba(15, 23, 42, 0.9);
   color: var(--text-main);
   font-size: 0.95rem;
@@ -114,23 +115,9 @@ input:focus {
 }
 
 /* =========================
-   CARDS (Dashboard / Trading)
-   ========================= */
-.card {
-  background: rgba(30, 41, 59, 0.75);
-  border-radius: 14px;
-  padding: 24px;
-  box-shadow:
-    0 12px 35px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  margin-top: 20px;
-}
-
-/* =========================
-   BUTTONS (GLOBAL)
+   BUTTONS
    ========================= */
 button {
-  position: relative;
   padding: 15px 34px;
   border-radius: 12px;
   border: none;
@@ -138,64 +125,105 @@ button {
   color: #fff;
   font-size: 1rem;
   font-weight: 650;
-  letter-spacing: 0.4px;
   cursor: pointer;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    filter 0.18s ease;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
   box-shadow:
     0 10px 30px rgba(34, 197, 94, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    inset 0 1px 0 rgba(255,255,255,0.25);
 }
 
 button:hover {
   transform: translateY(-3px);
-  filter: brightness(1.07);
-  box-shadow:
-    0 18px 45px var(--accent-glow),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  box-shadow: 0 18px 45px var(--accent-glow);
 }
 
 button:active {
-  transform: translateY(-1px) scale(0.98);
+  transform: scale(0.97);
 }
 
 /* =========================
-   BUY / SELL ACTIONS
+   DASHBOARD LAYOUT
    ========================= */
+.dashboard {
+  max-width: 720px;
+}
+
+.search-box {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.search-box input {
+  flex: 1;
+}
+
+/* =========================
+   RESULT BOX
+   ========================= */
+.result-box {
+  margin-top: 10px;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.7);
+  border-radius: 14px;
+  border: 1px solid rgba(255,255,255,0.08);
+  min-height: 90px;
+  text-align: left;
+}
+
+/* =========================
+   BUY METER
+   ========================= */
+#meter-container {
+  margin: 22px auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* =========================
+   QUICK ACTIONS
+   ========================= */
+.quick-actions {
+  margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+}
+
+.action-card {
+  background: rgba(30, 41, 59, 0.75);
+  border-radius: 16px;
+  padding: 22px;
+  text-align: center;
+  font-weight: 600;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+/* =========================
+   PAPER TRADING
+   ========================= */
+.card {
+  background: rgba(30, 41, 59, 0.75);
+  border-radius: 14px;
+  padding: 24px;
+  margin-top: 20px;
+}
+
 .trade-actions {
   display: flex;
   gap: 14px;
-  margin-top: 12px;
 }
 
-.buy {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-}
+.buy { background: linear-gradient(135deg, #22c55e, #16a34a); }
 
 .sell {
   background: linear-gradient(135deg, #ef4444, #dc2626);
-  box-shadow:
-    0 10px 30px rgba(239, 68, 68, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.25);
-}
-
-.sell:hover {
-  box-shadow:
-    0 18px 45px rgba(239, 68, 68, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.35);
-}
-
-/* =========================
-   RESULTS / MESSAGES
-   ========================= */
-.trade-result,
-#output {
-  margin-top: 18px;
-  font-weight: 600;
-  color: #a7f3d0;
-  text-align: center;
 }
 
 /* =========================
@@ -207,16 +235,16 @@ a {
 }
 
 /* =========================
-   ENTRANCE ANIMATION
+   ANIMATION
    ========================= */
 @keyframes fadeUp {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.98);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
+    transform: translateY(0);
   }
 }
 
@@ -224,16 +252,12 @@ a {
    RESPONSIVE
    ========================= */
 @media (max-width: 520px) {
-  h1 {
-    font-size: 2.2rem;
-  }
+  h1 { font-size: 2.2rem; }
 
-  .container {
-    padding: 38px 28px;
-  }
+  .container { padding: 38px 28px; }
 
-  .trade-actions {
-    flex-direction: column;
-  }
+  .search-box { flex-direction: column; }
+
+  .trade-actions { flex-direction: column; }
 }
 

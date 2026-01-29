@@ -5,31 +5,43 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Stock Dashboard</title>
 
-  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
 
-  <h1>📊 AI Stock Dashboard</h1>
+  <div class="container dashboard">
 
-  <input id="symbol" placeholder="Enter Stock Symbol (e.g. AAPL)" />
-  <button onclick="analyze()">Analyze</button>
+    <h1>📊 AI Stock Dashboard</h1>
+    <p class="subtitle">Analyze stocks using AI prediction & sentiment</p>
 
-  <!-- Buy meter -->
-  <div id="meter-container">
-    <canvas id="meter" width="200" height="120"></canvas>
+    <!-- SEARCH BAR -->
+    <div class="search-box">
+      <input id="symbol" placeholder="Enter stock symbol (AAPL)" />
+      <button onclick="analyzeStock()">Analyze</button>
+    </div>
+
+    <!-- BUY METER -->
+    <div id="meter-container">
+      <canvas id="meter" width="200" height="120"></canvas>
+    </div>
+
+    <!-- RESULT -->
+    <div id="output" class="result-box"></div>
+
+    <!-- ACTION CARDS -->
+    <div class="quick-actions">
+      <a href="trade.html" class="action-card">
+        💼<br>Paper Trading
+      </a>
+      <a href="chatbot.html" class="action-card">
+        🤖<br>Advisor Chatbot
+      </a>
+    </div>
+
   </div>
 
-  <!-- Analysis output -->
-  <div id="output"></div>
-
-  <hr />
-
-  <a href="trade.html">💸 Paper Trading</a> |
-  <a href="chatbot.html">🤖 Advisor Chatbot</a>
-
+  <!-- JS -->
   <script src="js/meter.js"></script>
   <script src="js/dashboard.js"></script>
-
 </body>
 </html>
-
