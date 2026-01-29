@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Stock Dashboard</title>
+
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <h1>📊 AI Stock Dashboard</h1>
+
+  <input id="symbol" placeholder="Enter Stock Symbol (e.g. AAPL)" />
+  <button onclick="analyze()">Analyze</button>
+
+  <!-- Buy meter -->
+  <div id="meter-container">
+    <canvas id="meter" width="200" height="120"></canvas>
+  </div>
+
+  <!-- Analysis output -->
+  <div id="output"></div>
+
+  <hr />
+
+  <a href="trade.html">💸 Paper Trading</a> |
+  <a href="chatbot.html">🤖 Advisor Chatbot</a>
+
+  <script src="js/meter.js"></script>
+  <script src="js/dashboard.js"></script>
+
+</body>
+</html>
+
