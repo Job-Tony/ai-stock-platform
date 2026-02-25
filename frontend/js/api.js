@@ -1,4 +1,4 @@
-const API_BASE = "https://ai-stock-platform-1.onrender.com";
+const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 
 async function analyze() {
   const sym = document.getElementById("symbol").value.toUpperCase();
