@@ -1,56 +1,43 @@
 import requests
-from backend.config import ALPHA_VANTAGE_API_KEY
+from config import FINNHUB_API_KEY
 
 
 def fetch_news(symbol: str):
     """
-    Fetch news + sentiment for a stock using Alpha Vantage NEWS_SENTIMENT.
+    Fetch news headlines for a stock using Finnhub API.
 
     Returns:
     {
-        "sentiment": float,   # average sentiment score (-1 to +1)
+        "sentiment": float,   # placeholder (we use VADER later)
         "headlines": list[str]
     }
     """
 
-    if not ALPHA_VANTAGE_API_KEY:
+    if not FINNHUB_API_KEY:
         return {"sentiment": 0.0, "headlines": []}
 
-    url = "https://www.alphavantage.co/query"
+    url = "https://finnhub.io/api/v1/company-news"
+
     params = {
-        "function": "NEWS_SENTIMENT",
-        "tickers": symbol,
-        "apikey": ALPHA_VANTAGE_API_KEY
+        "symbol": symbol,
+        "from": "2024-01-01",   # you can dynamically compute this later
+        "to": "2026-12-31",
+        "token": FINNHUB_API_KEY
     }
 
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, params=params, timeout=10)
         data = response.json()
     except Exception:
         return {"sentiment": 0.0, "headlines": []}
 
-    feed = data.get("feed", [])
-
-    sentiment_scores = []
     headlines = []
 
-    for item in feed:
-        # sentiment
-        score = item.get("overall_sentiment_score")
-        if score is not None:
-            sentiment_scores.append(float(score))
-
-        # headline text
-        title = item.get("title")
-        if title:
-            headlines.append(title)
-
-    avg_sentiment = (
-        sum(sentiment_scores) / len(sentiment_scores)
-        if sentiment_scores else 0.0
-    )
+    for item in data[:10]:
+        if "headline" in item:
+            headlines.append(item["headline"])
 
     return {
-        "sentiment": round(avg_sentiment, 3),
-        "headlines": headlines[:10]
+        "sentiment": 0.0,  # We let VADER compute real sentiment
+        "headlines": headlines
     }

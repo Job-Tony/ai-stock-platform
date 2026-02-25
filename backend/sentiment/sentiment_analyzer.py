@@ -1,5 +1,5 @@
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
-from backend.data.fetch_news import fetch_news
+from data.fetch_news import fetch_news   # ✅ fixed
 
 analyzer = SentimentIntensityAnalyzer()
 
@@ -7,7 +7,7 @@ analyzer = SentimentIntensityAnalyzer()
 def analyze_sentiment(symbol: str) -> float:
     """
     Returns sentiment score between -1 and +1
-    Combines Alpha Vantage news + VADER sentiment analysis
+    Combines news + VADER sentiment analysis
     """
 
     try:
@@ -26,7 +26,6 @@ def analyze_sentiment(symbol: str) -> float:
 
         vader_avg = sum(vader_scores) / len(vader_scores)
 
-        # 🔥 Combine Alpha Vantage sentiment + NLP sentiment
         combined_sentiment = (vader_avg * 0.6) + (av_sentiment * 0.4)
 
         return round(combined_sentiment, 3)
