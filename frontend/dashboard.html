@@ -6,6 +6,9 @@
   <title>AI Stock Dashboard</title>
 
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Chart.js for mini charts -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -13,6 +16,10 @@
 
     <h1>📊 AI Stock Dashboard</h1>
     <p class="subtitle">Analyze stocks using AI prediction & sentiment</p>
+
+    <!-- 🔥 MARKET OVERVIEW SECTION -->
+    <h2 class="section-title">🔥 Market Overview</h2>
+    <div id="default-stocks" class="stock-grid"></div>
 
     <!-- SEARCH BAR -->
     <div class="search-box">

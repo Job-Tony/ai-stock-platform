@@ -1,4 +1,5 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
+const DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"];
 
 async function analyze() {
   const sym = document.getElementById("symbol").value.toUpperCase();

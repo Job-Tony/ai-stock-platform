@@ -10,11 +10,15 @@ from chatbot.advisor_bot import chatbot_reply
 app = FastAPI()
 
 # =========================
-# CORS CONFIG (IMPORTANT)
+# CORS CONFIG (PRODUCTION SAFE)
 # =========================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # allow Netlify / browser access
+    allow_origins=[
+        "https://your-vercel-app.vercel.app",  # <-- REPLACE WITH YOUR REAL VERCEL URL
+        "http://localhost:5500",
+        "http://127.0.0.1:5500"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +36,7 @@ def root():
     }
 
 # =========================
-# ANALYSIS API (PRIMARY)
+# ANALYSIS API
 # =========================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
@@ -40,9 +44,7 @@ def analyze(symbol: str):
     raw_pred = predict_trend(prices)
     sentiment = analyze_sentiment(symbol)
 
-    confidence = max(0, min(100, int((raw_pred + 0.05) * 1000)))
-
-    # Convert numeric prediction → signal
+    # ---- SIGNAL LOGIC ----
     if raw_pred > 0.01:
         signal = "BUY"
     elif raw_pred < -0.01:
@@ -50,6 +52,10 @@ def analyze(symbol: str):
     else:
         signal = "HOLD"
 
+    # ---- CONFIDENCE (0–100 based on magnitude) ----
+    confidence = min(100, int(abs(raw_pred) * 2000))
+
+    # ---- BUY SCORE ----
     buy_score = normalize_buy_score(raw_pred, sentiment)
 
     return {
@@ -60,6 +66,13 @@ def analyze(symbol: str):
         "confidence": confidence,
         "buy_score": buy_score
     }
+
+# =========================
+# PRICE DATA API (FOR MINI CHARTS)
+# =========================
+@app.get("/prices/{symbol}")
+def get_prices(symbol: str):
+    return get_stock_data(symbol)
 
 # =========================
 # PAPER TRADING API
@@ -86,10 +99,10 @@ def normalize_buy_score(prediction: float, sentiment: float) -> int:
     """
     raw_score = prediction * sentiment
 
-    # Clamp raw score to expected range
+    # Clamp
     raw_score = max(-0.05, min(0.05, raw_score))
 
-    # Map -0.05 → 0 and +0.05 → 100
+    # Scale to 0-100
     normalized = int(((raw_score + 0.05) / 0.10) * 100)
 
     return normalized
