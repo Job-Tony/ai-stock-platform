@@ -9,24 +9,20 @@ from chatbot.advisor_bot import chatbot_reply
 
 app = FastAPI()
 
-# =========================
-# CORS CONFIG (PRODUCTION SAFE)
-# =========================
+# =====================================
+# CORS CONFIG (DEVELOPMENT SAFE)
+# =====================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://your-vercel-app.vercel.app",  # <-- REPLACE WITH YOUR REAL VERCEL URL
-        "http://localhost:5500",
-        "http://127.0.0.1:5500"
-    ],
+    allow_origins=["*"],   # allow all domains (safe for now)
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# =========================
+# =====================================
 # ROOT
-# =========================
+# =====================================
 @app.get("/")
 def root():
     return {
@@ -35,9 +31,9 @@ def root():
         "example": "/analyze/AAPL"
     }
 
-# =========================
+# =====================================
 # ANALYSIS API
-# =========================
+# =====================================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
     prices = get_stock_data(symbol)
@@ -67,30 +63,30 @@ def analyze(symbol: str):
         "buy_score": buy_score
     }
 
-# =========================
+# =====================================
 # PRICE DATA API (FOR MINI CHARTS)
-# =========================
+# =====================================
 @app.get("/prices/{symbol}")
 def get_prices(symbol: str):
     return get_stock_data(symbol)
 
-# =========================
+# =====================================
 # PAPER TRADING API
-# =========================
+# =====================================
 @app.post("/trade")
 def trade(order: dict):
     return execute_trade(order)
 
-# =========================
+# =====================================
 # CHATBOT API
-# =========================
+# =====================================
 @app.post("/chat")
 def chat(data: dict):
     return {"reply": chatbot_reply(data["message"])}
 
-# =========================
+# =====================================
 # BUY SCORE NORMALIZATION
-# =========================
+# =====================================
 def normalize_buy_score(prediction: float, sentiment: float) -> int:
     """
     prediction: typically small (-0.05 to +0.05)
@@ -99,7 +95,7 @@ def normalize_buy_score(prediction: float, sentiment: float) -> int:
     """
     raw_score = prediction * sentiment
 
-    # Clamp
+    # Clamp prediction range
     raw_score = max(-0.05, min(0.05, raw_score))
 
     # Scale to 0-100
