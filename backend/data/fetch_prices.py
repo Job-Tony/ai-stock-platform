@@ -1,12 +1,13 @@
 import requests
-from backend.config import ALPHA_VANTAGE_API_KEY
+import time
+from config import FINNHUB_API_KEY
 
 
 def get_stock_data(symbol: str, limit: int = 30):
     """
-    Fetch recent daily stock data from Alpha Vantage.
+    Fetch recent daily stock data from Finnhub.
 
-    Returns a list of dicts:
+    Returns:
     [
       {
         date, Open, High, Low, Close, Volume
@@ -14,36 +15,42 @@ def get_stock_data(symbol: str, limit: int = 30):
     ]
     """
 
-    url = "https://www.alphavantage.co/query"
+    end_time = int(time.time())
+    start_time = end_time - (limit * 86400)  # last N days
+
+    url = "https://finnhub.io/api/v1/stock/candle"
+
     params = {
-        "function": "TIME_SERIES_DAILY_ADJUSTED",
         "symbol": symbol,
-        "outputsize": "compact",
-        "apikey": ALPHA_VANTAGE_API_KEY
+        "resolution": "D",  # Daily candles
+        "from": start_time,
+        "to": end_time,
+        "token": FINNHUB_API_KEY
     }
 
     try:
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, params=params, timeout=10)
         data = response.json()
     except Exception:
         return []
 
-    series = data.get("Time Series (Daily)")
-    if not series:
+    # Finnhub returns status in "s"
+    if data.get("s") != "ok":
         return []
 
     prices = []
 
-    for date, values in list(series.items())[:limit]:
+    for i in range(len(data["t"])):
         prices.append({
-            "date": date,
-            "Open": float(values["1. open"]),
-            "High": float(values["2. high"]),
-            "Low": float(values["3. low"]),
-            "Close": float(values["4. close"]),
-            "Volume": float(values["6. volume"])
+            "date": time.strftime('%Y-%m-%d', time.gmtime(data["t"][i])),
+            "Open": float(data["o"][i]),
+            "High": float(data["h"][i]),
+            "Low": float(data["l"][i]),
+            "Close": float(data["c"][i]),
+            "Volume": float(data["v"][i])
         })
 
-    # Oldest → newest (important for ML & meter animation)
-    prices.reverse()
+    # Ensure oldest → newest
+    prices = prices[-limit:]
+
     return prices
