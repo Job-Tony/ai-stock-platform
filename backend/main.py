@@ -37,6 +37,17 @@ def root():
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
     prices = get_stock_data(symbol)
+
+    if prices is None or prices.empty:
+        return {
+            "symbol": symbol,
+            "signal": "NO DATA",
+            "prediction": 0.0,
+            "sentiment": 0.0,
+            "confidence": 0,
+            "buy_score": 50
+        }
+
     raw_pred = predict_trend(prices)
     sentiment = analyze_sentiment(symbol)
 
@@ -68,7 +79,22 @@ def analyze(symbol: str):
 # =====================================
 @app.get("/prices/{symbol}")
 def get_prices(symbol: str):
-    return get_stock_data(symbol)
+    df = get_stock_data(symbol)
+
+    if df is None or df.empty:
+        return []
+
+    # Take last 30 days for mini chart
+    df = df.tail(30)
+
+    # Convert dataframe to chart-friendly JSON
+    return [
+        {
+            "date": str(index.date()),
+            "Close": float(row["Close"])
+        }
+        for index, row in df.iterrows()
+    ]
 
 # =====================================
 # PAPER TRADING API
@@ -93,6 +119,7 @@ def normalize_buy_score(prediction: float, sentiment: float) -> int:
     sentiment:  -1 to +1
     returns:    0 to 100
     """
+
     raw_score = prediction * sentiment
 
     # Clamp prediction range
