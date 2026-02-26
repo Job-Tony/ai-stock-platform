@@ -10,7 +10,7 @@ from chatbot.advisor_bot import chatbot_reply
 app = FastAPI()
 
 # =====================================
-# CORS CONFIG (DEVELOPMENT SAFE)
+# CORS (DEV SAFE)
 # =====================================
 app.add_middleware(
     CORSMiddleware,
@@ -32,13 +32,13 @@ def root():
     }
 
 # =====================================
-# ANALYSIS API
+# ANALYSIS
 # =====================================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
     prices = get_stock_data(symbol)
 
-    if prices is None or prices.empty:
+    if not prices:
         return {
             "symbol": symbol,
             "signal": "NO DATA",
@@ -51,7 +51,7 @@ def analyze(symbol: str):
     raw_pred = predict_trend(prices)
     sentiment = analyze_sentiment(symbol)
 
-    # ---- SIGNAL LOGIC ----
+    # SIGNAL
     if raw_pred > 0.01:
         signal = "BUY"
     elif raw_pred < -0.01:
@@ -72,60 +72,31 @@ def analyze(symbol: str):
     }
 
 # =====================================
-# PRICE DATA API (SAFE VERSION)
+# PRICES (FOR MINI CHARTS)
 # =====================================
 @app.get("/prices/{symbol}")
 def get_prices(symbol: str):
-    try:
-        df = get_stock_data(symbol)
-
-        if df is None or df.empty:
-            return []
-
-        # Ensure we have Close column
-        if "Close" not in df.columns:
-            return []
-
-        # Reset index to make date a column
-        df = df.reset_index()
-
-        # Keep last 30 rows
-        df = df.tail(30)
-
-        # First column is usually Date after reset_index()
-        date_column = df.columns[0]
-
-        return [
-            {
-                "date": str(row[date_column]),
-                "Close": float(row["Close"])
-            }
-            for _, row in df.iterrows()
-        ]
-
-    except Exception as e:
-        print("Prices API error:", e)
-        return []
+    prices = get_stock_data(symbol)
+    return prices if prices else []
 
 # =====================================
-# PAPER TRADING API
+# PAPER TRADING
 # =====================================
 @app.post("/trade")
 def trade(order: dict):
     return execute_trade(order)
 
 # =====================================
-# CHATBOT API
+# CHATBOT
 # =====================================
 @app.post("/chat")
 def chat(data: dict):
     return {"reply": chatbot_reply(data["message"])}
 
 # =====================================
-# BUY SCORE NORMALIZATION
+# BUY SCORE
 # =====================================
 def normalize_buy_score(prediction: float, sentiment: float) -> int:
     raw_score = prediction * sentiment
     raw_score = max(-0.05, min(0.05, raw_score))
-    normalized = int(((raw_score + 0.05) / 0.10) * 100)
-    return normalized
+    return int(((raw_score + 0.05) / 0.10) * 100)
