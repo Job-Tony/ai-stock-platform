@@ -12,13 +12,25 @@
   <div class="container dashboard">
 
     <h1>📊 AI Stock Dashboard</h1>
-    <p class="subtitle">Analyze stocks using AI prediction & sentiment</p>
+    <p class="subtitle">AI-powered stock analysis with sentiment, ML & risk metrics</p>
 
-    <!-- 🔥 MARKET OVERVIEW SECTION -->
+    <!-- MARKET SUMMARY -->
+    <div class="market-summary">
+      <div class="summary-box">
+        <h4>Market Sentiment</h4>
+        <p id="market-sentiment">Analyzing...</p>
+      </div>
+      <div class="summary-box">
+        <h4>System Health</h4>
+        <p>Random Forest • NLP • Risk Engine</p>
+      </div>
+    </div>
+
+    <!-- MARKET GRID -->
     <h2 class="section-title">🔥 Market Overview</h2>
     <div id="default-stocks" class="stock-grid"></div>
 
-    <!-- SEARCH BAR -->
+    <!-- SEARCH -->
     <div class="search-box">
       <input id="symbol" placeholder="Enter stock symbol (AAPL)" />
       <button onclick="analyzeStock()">Analyze</button>
@@ -32,19 +44,14 @@
     <!-- RESULT -->
     <div id="output" class="result-box"></div>
 
-    <!-- ACTION CARDS -->
+    <!-- ACTIONS -->
     <div class="quick-actions">
-      <a href="trade.html" class="action-card">
-        💼<br>Paper Trading
-      </a>
-      <a href="chatbot.html" class="action-card">
-        🤖<br>Advisor Chatbot
-      </a>
+      <a href="trade.html" class="action-card">💼<br>Paper Trading</a>
+      <a href="chatbot.html" class="action-card">🤖<br>Advisor Chatbot</a>
     </div>
 
   </div>
 
-  <!-- LOAD SCRIPTS PROPERLY -->
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script defer src="js/meter.js"></script>
   <script defer src="js/dashboard.js"></script>
