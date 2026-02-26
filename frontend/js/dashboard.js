@@ -1,12 +1,18 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
-
 const DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"];
 
 /* =====================================
-   LOAD MARKET OVERVIEW ON PAGE LOAD
+   LOAD ON DOM READY
 ===================================== */
 
-document.addEventListener("DOMContentLoaded", loadDefaultStocks);
+document.addEventListener("DOMContentLoaded", () => {
+  console.log("Dashboard Loaded");
+  loadDefaultStocks();
+});
+
+/* =====================================
+   LOAD MARKET OVERVIEW
+===================================== */
 
 async function loadDefaultStocks() {
   const container = document.getElementById("default-stocks");
@@ -15,33 +21,36 @@ async function loadDefaultStocks() {
   container.innerHTML = "";
 
   for (const sym of DEFAULT_STOCKS) {
-    try {
-      const res = await fetch(`${API_BASE}/analyze/${sym}`);
-      if (!res.ok) throw new Error("Analyze failed");
 
-      const data = await res.json();
-      const signalClass = data.signal;
+    // ✅ CREATE CARD FIRST (NO BLOCKING)
+    const card = document.createElement("div");
+    card.className = "stock-card";
+    card.onclick = () => autoAnalyze(sym);
 
-      const card = document.createElement("div");
-      card.className = "stock-card";
-      card.onclick = () => autoAnalyze(sym);
+    card.innerHTML = `
+      <h3>${sym}</h3>
+      <div class="mini-chart">
+        <canvas id="chart-${sym}"></canvas>
+      </div>
+      <p class="mini-signal loading">Loading...</p>
+    `;
 
-      card.innerHTML = `
-        <h3>${sym}</h3>
-        <div class="mini-chart">
-          <canvas id="chart-${sym}"></canvas>
-        </div>
-        <p class="mini-signal ${signalClass}">${data.signal}</p>
-      `;
+    container.appendChild(card);
 
-      container.appendChild(card);
+    // ✅ LOAD PRICE CHART IMMEDIATELY
+    renderMiniChart(`chart-${sym}`, sym);
 
-      // Render mini chart
-      renderMiniChart(`chart-${sym}`, sym);
-
-    } catch (e) {
-      console.log("Error loading", sym, e);
-    }
+    // ✅ LOAD SIGNAL SEPARATELY (NON BLOCKING)
+    fetch(`${API_BASE}/analyze/${sym}`)
+      .then(res => res.json())
+      .then(data => {
+        const signalEl = card.querySelector(".mini-signal");
+        signalEl.textContent = data.signal;
+        signalEl.className = "mini-signal " + data.signal;
+      })
+      .catch(() => {
+        card.querySelector(".mini-signal").textContent = "ERR";
+      });
   }
 }
 
@@ -54,7 +63,6 @@ async function analyzeStock() {
   const output = document.getElementById("output");
 
   const symbol = symbolInput.value.trim().toUpperCase();
-
   if (!symbol) {
     output.innerHTML = "Please enter a stock symbol";
     return;
@@ -64,7 +72,7 @@ async function analyzeStock() {
 
   try {
     const res = await fetch(`${API_BASE}/analyze/${symbol}`);
-    if (!res.ok) throw new Error("Analyze failed");
+    if (!res.ok) throw new Error();
 
     const data = await res.json();
 
@@ -85,13 +93,13 @@ async function analyzeStock() {
 
     renderMeter(data.buy_score);
 
-  } catch (err) {
+  } catch {
     output.innerHTML = "❌ Error fetching data";
   }
 }
 
 /* =====================================
-   AUTO ANALYZE WHEN CARD CLICKED
+   AUTO ANALYZE
 ===================================== */
 
 function autoAnalyze(symbol) {
@@ -100,13 +108,13 @@ function autoAnalyze(symbol) {
 }
 
 /* =====================================
-   MINI LINE CHART
+   MINI CHART
 ===================================== */
 
 async function renderMiniChart(canvasId, symbol) {
   try {
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
-    if (!res.ok) throw new Error("Price fetch failed");
+    if (!res.ok) throw new Error();
 
     const priceData = await res.json();
     if (!priceData || priceData.length === 0) return;
