@@ -4,14 +4,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from data.fetch_prices import get_stock_data
 from sentiment.sentiment_analyzer import analyze_sentiment
 from ml.random_forest import predict_trend
+from ml.risk_analyzer import calculate_risk
 from trading.paper_trading import execute_trade
 from chatbot.advisor_bot import chatbot_reply
 
 app = FastAPI()
 
-# =====================================
-# CORS (DEV SAFE)
-# =====================================
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,20 +18,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =====================================
-# ROOT
-# =====================================
 @app.get("/")
 def root():
-    return {
-        "message": "AI Stock Platform API is running",
-        "primary_endpoint": "/analyze/{symbol}",
-        "example": "/analyze/AAPL"
-    }
+    return {"message": "AI Stock Platform API running"}
 
-# =====================================
-# ANALYSIS
-# =====================================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
     prices = get_stock_data(symbol)
@@ -41,62 +29,56 @@ def analyze(symbol: str):
     if not prices:
         return {
             "symbol": symbol,
-            "signal": "NO DATA",
-            "prediction": 0.0,
-            "sentiment": 0.0,
-            "confidence": 0,
-            "buy_score": 50
+            "signal": "NO DATA"
         }
 
-    raw_pred = predict_trend(prices)
+    prediction, mae = predict_trend(prices)
     sentiment = analyze_sentiment(symbol)
+    risk = calculate_risk(prices)
 
-    # SIGNAL
-    if raw_pred > 0.01:
+    # Improved Signal Logic
+    if prediction > 0.005 and sentiment > 0:
         signal = "BUY"
-    elif raw_pred < -0.01:
+    elif prediction < -0.005 and sentiment < 0:
         signal = "SELL"
     else:
         signal = "HOLD"
 
-    confidence = min(100, int(abs(raw_pred) * 2000))
-    buy_score = normalize_buy_score(raw_pred, sentiment)
+    confidence = min(
+        100,
+        int((abs(prediction) + abs(sentiment)) * 5000)
+    )
+
+    buy_score = normalize_buy_score(prediction, sentiment)
 
     return {
         "symbol": symbol,
         "signal": signal,
-        "prediction": raw_pred,
+        "prediction": prediction,
         "sentiment": sentiment,
         "confidence": confidence,
-        "buy_score": buy_score
+        "buy_score": buy_score,
+        "risk_level": risk,
+        "model_mae": mae
     }
 
-# =====================================
-# PRICES (FOR MINI CHARTS)
-# =====================================
-@app.get("/prices/{symbol}")
-def get_prices(symbol: str):
-    prices = get_stock_data(symbol)
-    return prices if prices else []
 
-# =====================================
-# PAPER TRADING
-# =====================================
+@app.get("/prices/{symbol}")
+def prices(symbol: str):
+    return get_stock_data(symbol)
+
+
 @app.post("/trade")
 def trade(order: dict):
     return execute_trade(order)
 
-# =====================================
-# CHATBOT
-# =====================================
+
 @app.post("/chat")
 def chat(data: dict):
     return {"reply": chatbot_reply(data["message"])}
 
-# =====================================
-# BUY SCORE
-# =====================================
+
 def normalize_buy_score(prediction: float, sentiment: float) -> int:
-    raw_score = prediction * sentiment
-    raw_score = max(-0.05, min(0.05, raw_score))
-    return int(((raw_score + 0.05) / 0.10) * 100)
+    score = (prediction * 0.7) + (sentiment * 0.3)
+    score = max(-0.05, min(0.05, score))
+    return int(((score + 0.05) / 0.10) * 100)
