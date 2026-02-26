@@ -1,11 +1,12 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
+
 const DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"];
 
 /* =====================================
    LOAD MARKET OVERVIEW ON PAGE LOAD
 ===================================== */
 
-window.onload = loadDefaultStocks;
+document.addEventListener("DOMContentLoaded", loadDefaultStocks);
 
 async function loadDefaultStocks() {
   const container = document.getElementById("default-stocks");
@@ -99,7 +100,7 @@ function autoAnalyze(symbol) {
 }
 
 /* =====================================
-   MINI LINE CHART (FINAL FIXED VERSION)
+   MINI LINE CHART
 ===================================== */
 
 async function renderMiniChart(canvasId, symbol) {
@@ -113,7 +114,7 @@ async function renderMiniChart(canvasId, symbol) {
     const canvas = document.getElementById(canvasId);
     if (!canvas) return;
 
-    const ctx = canvas.getContext("2d"); // ✅ IMPORTANT FIX
+    const ctx = canvas.getContext("2d");
 
     new Chart(ctx, {
       type: "line",
@@ -130,9 +131,7 @@ async function renderMiniChart(canvasId, symbol) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-          legend: { display: false }
-        },
+        plugins: { legend: { display: false } },
         scales: {
           x: { display: false },
           y: { display: false }
