@@ -1,4 +1,4 @@
-const API_BASE = "https://ai-stock-platform-1.onrender.com";
+const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 
 async function placeTrade(type) {
   const symbol = document.getElementById("tradeSymbol").value.toUpperCase();
@@ -6,21 +6,14 @@ async function placeTrade(type) {
   const price = parseFloat(document.getElementById("price").value);
   const result = document.getElementById("tradeResult");
 
-  // Validation
   if (!symbol || !qty || !price) {
     result.innerHTML = "⚠️ Fill all fields";
     return;
   }
 
-  // Loading state
   result.innerHTML = "⏳ Placing trade...";
 
-  const order = {
-    symbol,
-    quantity: qty,
-    price,
-    type
-  };
+  const order = { symbol, quantity: qty, price, type };
 
   try {
     const res = await fetch(`${API_BASE}/trade`, {
@@ -29,9 +22,7 @@ async function placeTrade(type) {
       body: JSON.stringify(order)
     });
 
-    if (!res.ok) {
-      throw new Error("Trade failed");
-    }
+    if (!res.ok) throw new Error("Trade failed");
 
     const data = await res.json();
 
@@ -41,6 +32,7 @@ async function placeTrade(type) {
         <pre>${JSON.stringify(data, null, 2)}</pre>
       </div>
     `;
+
   } catch (err) {
     result.innerHTML = "❌ Trade failed. Backend not reachable.";
   }

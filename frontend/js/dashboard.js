@@ -1,5 +1,4 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
-
 const DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"];
 
 /* =====================================
@@ -17,9 +16,10 @@ async function loadDefaultStocks() {
   for (const sym of DEFAULT_STOCKS) {
     try {
       const res = await fetch(`${API_BASE}/analyze/${sym}`);
-      const data = await res.json();
+      if (!res.ok) throw new Error("Analyze failed");
 
-      const signalClass = data.signal; // BUY / SELL / HOLD
+      const data = await res.json();
+      const signalClass = data.signal;
 
       const card = document.createElement("div");
       card.className = "stock-card";
@@ -27,7 +27,9 @@ async function loadDefaultStocks() {
 
       card.innerHTML = `
         <h3>${sym}</h3>
-        <canvas id="chart-${sym}" height="80"></canvas>
+        <div class="mini-chart">
+          <canvas id="chart-${sym}"></canvas>
+        </div>
         <p class="mini-signal ${signalClass}">${data.signal}</p>
       `;
 
@@ -37,7 +39,7 @@ async function loadDefaultStocks() {
       renderMiniChart(`chart-${sym}`, sym);
 
     } catch (e) {
-      console.log("Error loading", sym);
+      console.log("Error loading", sym, e);
     }
   }
 }
@@ -61,6 +63,8 @@ async function analyzeStock() {
 
   try {
     const res = await fetch(`${API_BASE}/analyze/${symbol}`);
+    if (!res.ok) throw new Error("Analyze failed");
+
     const data = await res.json();
 
     let recommendation =
@@ -68,7 +72,6 @@ async function analyzeStock() {
       data.buy_score >= 60 ? "BUY" :
       data.buy_score >= 45 ? "HOLD" : "SELL";
 
-    // 🔥 convert STRONG BUY → STRONG-BUY for CSS
     const recClass = recommendation.replace(" ", "-");
 
     output.innerHTML = `
@@ -96,19 +99,21 @@ function autoAnalyze(symbol) {
 }
 
 /* =====================================
-   MINI LINE CHART
+   MINI LINE CHART (FINAL FIXED VERSION)
 ===================================== */
 
 async function renderMiniChart(canvasId, symbol) {
   try {
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
-    const priceData = await res.json();
+    if (!res.ok) throw new Error("Price fetch failed");
 
+    const priceData = await res.json();
     if (!priceData || priceData.length === 0) return;
 
-    const ctx = document.getElementById(canvasId);
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
 
-    if (!ctx) return;
+    const ctx = canvas.getContext("2d"); // ✅ IMPORTANT FIX
 
     new Chart(ctx, {
       type: "line",
@@ -136,6 +141,6 @@ async function renderMiniChart(canvasId, symbol) {
     });
 
   } catch (err) {
-    console.log("Chart error:", symbol);
+    console.log("Chart error:", symbol, err);
   }
 }

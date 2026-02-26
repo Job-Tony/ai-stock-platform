@@ -1,4 +1,4 @@
-const API_BASE = "https://ai-stock-platform-1.onrender.com";
+const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 
 async function sendMessage() {
   const input = document.getElementById("userMessage");
@@ -7,7 +7,6 @@ async function sendMessage() {
   const message = input.value.trim();
   if (!message) return;
 
-  // User message
   chatBox.innerHTML += `<div class="user-msg">🧑 ${message}</div>`;
   input.value = "";
   chatBox.scrollTop = chatBox.scrollHeight;
