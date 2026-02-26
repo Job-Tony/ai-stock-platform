@@ -11,50 +11,93 @@
 
   <div class="container dashboard">
 
+    <!-- HEADER -->
     <h1>📊 AI Stock Dashboard</h1>
-    <p class="subtitle">AI-powered stock analysis with sentiment, ML & risk metrics</p>
+    <p class="subtitle">
+      AI-powered stock analysis with Machine Learning, Sentiment & Risk Metrics
+    </p>
 
-    <!-- MARKET SUMMARY -->
+    <!-- =========================
+         MARKET SUMMARY
+    ========================== -->
     <div class="market-summary">
+
       <div class="summary-box">
         <h4>Market Sentiment</h4>
-        <p id="market-sentiment">Analyzing...</p>
+        <p id="market-sentiment">Loading...</p>
       </div>
+
       <div class="summary-box">
-        <h4>System Health</h4>
-        <p>Random Forest • NLP • Risk Engine</p>
+        <h4>System Intelligence</h4>
+        <p>Random Forest • VADER NLP • Volatility Risk Engine</p>
       </div>
+
     </div>
 
-    <!-- MARKET GRID -->
+    <!-- =========================
+         COMMON MARKET NEWS
+    ========================== -->
+    <h2 class="section-title">📰 Market News</h2>
+    <div id="market-news" class="market-news-box">
+      Loading latest market updates...
+    </div>
+
+    <!-- =========================
+         MARKET GRID
+    ========================== -->
     <h2 class="section-title">🔥 Market Overview</h2>
     <div id="default-stocks" class="stock-grid"></div>
 
-    <!-- SEARCH -->
+    <!-- =========================
+         SEARCH SECTION
+    ========================== -->
     <div class="search-box">
       <input id="symbol" placeholder="Enter stock symbol (AAPL)" />
       <button onclick="analyzeStock()">Analyze</button>
     </div>
 
-    <!-- BUY METER -->
+    <!-- =========================
+         BUY SCORE METER
+    ========================== -->
     <div id="meter-container">
       <canvas id="meter" width="200" height="120"></canvas>
     </div>
 
-    <!-- RESULT -->
+    <!-- =========================
+         ANALYSIS RESULT
+    ========================== -->
     <div id="output" class="result-box"></div>
 
-    <!-- ACTIONS -->
+    <!-- =========================
+         QUICK ACTIONS
+    ========================== -->
     <div class="quick-actions">
-      <a href="trade.html" class="action-card">💼<br>Paper Trading</a>
-      <a href="chatbot.html" class="action-card">🤖<br>Advisor Chatbot</a>
+      <a href="trade.html" class="action-card">
+        💼<br>Paper Trading
+      </a>
+      <a href="chatbot.html" class="action-card">
+        🤖<br>Advisor Chatbot
+      </a>
     </div>
 
   </div>
 
-  <script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script defer src="js/meter.js"></script>
-  <script defer src="js/dashboard.js"></script>
+  <!-- =========================
+       EXPANDED CHART MODAL
+  ========================== -->
+  <div id="chart-modal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">×</span>
+      <canvas id="expanded-chart"></canvas>
+    </div>
+  </div>
+
+  <!-- =========================
+       SCRIPTS
+  ========================== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="js/meter.js"></script>
+  <script src="js/dashboard.js"></script>
 
 </body>
 </html>

@@ -1,8 +1,15 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 const DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"];
 
+let expandedChartInstance = null;
+
+/* =========================
+   ON LOAD
+========================= */
 document.addEventListener("DOMContentLoaded", () => {
   loadDefaultStocks();
+  loadMarketSentiment();
+  loadMarketNews();
 });
 
 /* =========================
@@ -13,9 +20,10 @@ async function loadDefaultStocks() {
   container.innerHTML = "";
 
   for (const sym of DEFAULT_STOCKS) {
+
     const card = document.createElement("div");
     card.className = "stock-card";
-    card.onclick = () => autoAnalyze(sym);
+    card.onclick = () => expandChart(sym);
 
     card.innerHTML = `
       <h3>${sym}</h3>
@@ -35,16 +43,19 @@ async function loadDefaultStocks() {
 
     renderMiniChart(`chart-${sym}`, sym);
 
-    // SIGNAL
+    /* LOAD SIGNAL */
     fetch(`${API_BASE}/analyze/${sym}`)
       .then(res => res.json())
       .then(data => {
         const signalEl = card.querySelector(".mini-signal");
         signalEl.textContent = data.signal;
         signalEl.className = "mini-signal " + data.signal;
+      })
+      .catch(() => {
+        card.querySelector(".mini-signal").textContent = "ERR";
       });
 
-    // NEWS
+    /* LOAD STOCK NEWS */
     fetch(`${API_BASE}/news/${sym}`)
       .then(res => res.json())
       .then(news => {
@@ -63,6 +74,47 @@ async function loadDefaultStocks() {
       .catch(() => {
         card.querySelector(".news").textContent = "News unavailable";
       });
+  }
+}
+
+/* =========================
+   MARKET SENTIMENT
+========================= */
+async function loadMarketSentiment() {
+  const el = document.getElementById("market-sentiment");
+
+  try {
+    const res = await fetch(`${API_BASE}/market-sentiment`);
+    const data = await res.json();
+
+    el.textContent = `${data.mood} (${data.value})`;
+  } catch {
+    el.textContent = "Unavailable";
+  }
+}
+
+/* =========================
+   COMMON MARKET NEWS
+========================= */
+async function loadMarketNews() {
+  const container = document.getElementById("market-news");
+
+  try {
+    const res = await fetch(`${API_BASE}/market-news`);
+    const data = await res.json();
+
+    if (!data.headlines || data.headlines.length === 0) {
+      container.textContent = "No major market news.";
+      return;
+    }
+
+    container.innerHTML = data.headlines
+      .slice(0, 5)
+      .map(h => `<div class="news-item">• ${h}</div>`)
+      .join("");
+
+  } catch {
+    container.textContent = "News unavailable.";
   }
 }
 
@@ -108,11 +160,6 @@ async function analyzeStock() {
   }
 }
 
-function autoAnalyze(symbol) {
-  document.getElementById("symbol").value = symbol;
-  analyzeStock();
-}
-
 /* =========================
    MINI CHART
 ========================= */
@@ -131,16 +178,14 @@ async function renderMiniChart(canvasId, symbol) {
           data: priceData.map(p => p.Close),
           borderColor: "#22c55e",
           borderWidth: 2,
-          pointRadius: 0,
           tension: 0.4,
+          pointRadius: 0
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: {
-          duration: 600
-        },
+        animation: { duration: 600 },
         plugins: { legend: { display: false } },
         scales: {
           x: { display: false },
@@ -150,6 +195,49 @@ async function renderMiniChart(canvasId, symbol) {
     });
 
   } catch (err) {
-    console.log(err);
+    console.log("Chart error:", err);
   }
+}
+
+/* =========================
+   EXPANDED CHART MODAL
+========================= */
+async function expandChart(symbol) {
+  const modal = document.getElementById("chart-modal");
+  modal.style.display = "flex";
+
+  const res = await fetch(`${API_BASE}/prices/${symbol}`);
+  const data = await res.json();
+
+  const ctx = document.getElementById("expanded-chart").getContext("2d");
+
+  if (expandedChartInstance) {
+    expandedChartInstance.destroy();
+  }
+
+  expandedChartInstance = new Chart(ctx, {
+    type: "line",
+    data: {
+      labels: data.map(p => p.date),
+      datasets: [{
+        label: symbol + " Price",
+        data: data.map(p => p.Close),
+        borderColor: "#22c55e",
+        borderWidth: 3,
+        tension: 0.3,
+        pointRadius: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: true }
+      }
+    }
+  });
+}
+
+function closeModal() {
+  document.getElementById("chart-modal").style.display = "none";
 }
