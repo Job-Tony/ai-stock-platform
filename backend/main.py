@@ -14,7 +14,7 @@ app = FastAPI()
 # =====================================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # allow all domains (safe for now)
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,10 +59,7 @@ def analyze(symbol: str):
     else:
         signal = "HOLD"
 
-    # ---- CONFIDENCE (0–100 based on magnitude) ----
     confidence = min(100, int(abs(raw_pred) * 2000))
-
-    # ---- BUY SCORE ----
     buy_score = normalize_buy_score(raw_pred, sentiment)
 
     return {
@@ -75,26 +72,40 @@ def analyze(symbol: str):
     }
 
 # =====================================
-# PRICE DATA API (FOR MINI CHARTS)
+# PRICE DATA API (SAFE VERSION)
 # =====================================
 @app.get("/prices/{symbol}")
 def get_prices(symbol: str):
-    df = get_stock_data(symbol)
+    try:
+        df = get_stock_data(symbol)
 
-    if df is None or df.empty:
+        if df is None or df.empty:
+            return []
+
+        # Ensure we have Close column
+        if "Close" not in df.columns:
+            return []
+
+        # Reset index to make date a column
+        df = df.reset_index()
+
+        # Keep last 30 rows
+        df = df.tail(30)
+
+        # First column is usually Date after reset_index()
+        date_column = df.columns[0]
+
+        return [
+            {
+                "date": str(row[date_column]),
+                "Close": float(row["Close"])
+            }
+            for _, row in df.iterrows()
+        ]
+
+    except Exception as e:
+        print("Prices API error:", e)
         return []
-
-    # Take last 30 days for mini chart
-    df = df.tail(30)
-
-    # Convert dataframe to chart-friendly JSON
-    return [
-        {
-            "date": str(index.date()),
-            "Close": float(row["Close"])
-        }
-        for index, row in df.iterrows()
-    ]
 
 # =====================================
 # PAPER TRADING API
@@ -114,18 +125,7 @@ def chat(data: dict):
 # BUY SCORE NORMALIZATION
 # =====================================
 def normalize_buy_score(prediction: float, sentiment: float) -> int:
-    """
-    prediction: typically small (-0.05 to +0.05)
-    sentiment:  -1 to +1
-    returns:    0 to 100
-    """
-
     raw_score = prediction * sentiment
-
-    # Clamp prediction range
     raw_score = max(-0.05, min(0.05, raw_score))
-
-    # Scale to 0-100
     normalized = int(((raw_score + 0.05) / 0.10) * 100)
-
     return normalized
