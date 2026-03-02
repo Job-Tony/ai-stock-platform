@@ -4,13 +4,14 @@
 :root {
   --bg-dark: #020617;
   --bg-mid: #0f172a;
+  --card-bg: rgba(15, 23, 42, 0.9);
+  --glass-border: rgba(255,255,255,0.08);
   --accent: #22c55e;
-  --accent-glow: rgba(34, 197, 94, 0.45);
-  --text-main: #e5e7eb;
-  --text-muted: #94a3b8;
-  --border-glass: rgba(255, 255, 255, 0.08);
+  --accent-glow: rgba(34,197,94,0.45);
   --danger: #ef4444;
   --warning: #facc15;
+  --text-main: #e5e7eb;
+  --text-muted: #94a3b8;
 }
 
 /* =========================
@@ -31,7 +32,7 @@ html {
 ========================= */
 body {
   min-height: 100vh;
-  font-family: "Segoe UI", Inter, Roboto, Arial, sans-serif;
+  font-family: "Segoe UI", Inter, sans-serif;
   color: var(--text-main);
 
   background:
@@ -41,7 +42,6 @@ body {
   display: flex;
   justify-content: center;
   padding: 40px 0;
-  overflow-x: hidden;
 }
 
 /* =========================
@@ -60,15 +60,11 @@ body {
     rgba(2, 6, 23, 0.95)
   );
 
-  backdrop-filter: blur(14px);
-  border: 1px solid var(--border-glass);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
 
-  box-shadow:
-    0 40px 80px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-
+  box-shadow: 0 40px 80px rgba(0,0,0,0.6);
   text-align: center;
-  animation: fadeUp 0.8s ease;
 }
 
 /* =========================
@@ -96,43 +92,15 @@ h1 {
 }
 
 .summary-box {
-  background: rgba(30, 41, 59, 0.75);
+  background: var(--card-bg);
   padding: 20px;
   border-radius: 16px;
-  border: 1px solid var(--border-glass);
+  border: 1px solid var(--glass-border);
   text-align: left;
-  transition: 0.3s ease;
-}
-
-.summary-box:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.5);
 }
 
 .summary-box h4 {
   font-size: 0.9rem;
-  margin-bottom: 6px;
-  color: var(--text-muted);
-}
-
-/* =========================
-   MARKET NEWS
-========================= */
-.market-news-box {
-  margin: 0 auto 35px auto;
-  max-width: 900px;
-  background: rgba(30, 41, 59, 0.75);
-  padding: 20px;
-  border-radius: 16px;
-  border: 1px solid var(--border-glass);
-  text-align: left;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.news-item {
-  font-size: 0.9rem;
-  margin-bottom: 10px;
   color: var(--text-muted);
 }
 
@@ -141,25 +109,32 @@ h1 {
 ========================= */
 .stock-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 25px;
   margin: 0 auto 40px auto;
   max-width: 1000px;
 }
 
+/* =========================
+   STOCK CARD (HOVER EXPAND)
+========================= */
 .stock-card {
-  background: rgba(15, 23, 42, 0.9);
-  padding: 20px;
+  position: relative;
+  background: var(--card-bg);
+  padding: 22px;
   border-radius: 18px;
-  border: 1px solid rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
   text-align: left;
-  transition: all 0.3s ease;
   cursor: pointer;
+  overflow: hidden;
+
+  transition: transform 0.35s ease, box-shadow 0.35s ease;
 }
 
 .stock-card:hover {
-  transform: scale(1.04);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+  transform: scale(1.08);
+  box-shadow: 0 30px 70px rgba(0,0,0,0.7);
+  z-index: 20;
 }
 
 .stock-card h3 {
@@ -170,8 +145,26 @@ h1 {
   height: 65px;
 }
 
+/* Hide news by default */
+.stock-card .expanded-info {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, opacity 0.3s ease;
+}
+
+/* Show news on hover */
+.stock-card:hover .expanded-info {
+  max-height: 300px;
+  opacity: 1;
+  margin-top: 15px;
+}
+
+/* =========================
+   SIGNAL COLORS
+========================= */
 .mini-signal {
-  margin-top: 10px;
+  margin-top: 12px;
   font-weight: 600;
 }
 
@@ -193,8 +186,8 @@ input {
   flex: 1;
   padding: 14px;
   border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.15);
-  background: rgba(15, 23, 42, 0.95);
+  border: 1px solid var(--glass-border);
+  background: var(--card-bg);
   color: var(--text-main);
 }
 
@@ -216,8 +209,8 @@ button {
 
   background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
-
   transition: 0.3s ease;
+
   box-shadow: 0 10px 25px rgba(34,197,94,0.35);
 }
 
@@ -233,10 +226,37 @@ button:hover {
   margin: 25px auto;
   max-width: 700px;
   padding: 22px;
-  background: rgba(15,23,42,0.8);
+  background: var(--card-bg);
   border-radius: 16px;
-  border: 1px solid var(--border-glass);
+  border: 1px solid var(--glass-border);
   text-align: left;
+}
+
+/* =========================
+   QUICK ACTION BUTTONS
+========================= */
+.quick-actions {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-top: 40px;
+}
+
+.quick-actions a {
+  text-decoration: none;
+  color: var(--text-main);
+  background: var(--card-bg);
+  padding: 18px 30px;
+  border-radius: 18px;
+  border: 1px solid var(--glass-border);
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.quick-actions a:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+  border-color: var(--accent);
 }
 
 /* =========================
@@ -249,29 +269,22 @@ button:hover {
   background: rgba(2,6,23,0.9);
   justify-content: center;
   align-items: center;
-  z-index: 1000;
 }
 
 .modal-content {
   width: 75%;
   height: 70%;
-  background: rgba(15,23,42,0.95);
+  background: var(--card-bg);
   padding: 30px;
   border-radius: 20px;
-  border: 1px solid var(--border-glass);
-  position: relative;
+  border: 1px solid var(--glass-border);
 }
 
 .close-btn {
   position: absolute;
   top: 16px;
   right: 20px;
-  font-size: 24px;
   cursor: pointer;
-}
-
-.close-btn:hover {
-  color: var(--danger);
 }
 
 /* =========================
@@ -280,10 +293,10 @@ button:hover {
 .trade-card {
   max-width: 650px;
   margin: 0 auto 35px auto;
-  background: rgba(15, 23, 42, 0.9);
+  background: var(--card-bg);
   padding: 30px;
   border-radius: 20px;
-  border: 1px solid var(--border-glass);
+  border: 1px solid var(--glass-border);
 }
 
 .trade-actions {
@@ -297,20 +310,6 @@ button:hover {
   background: linear-gradient(135deg, #ef4444, #dc2626);
 }
 
-.trade-result {
-  margin: 30px auto;
-  max-width: 650px;
-  text-align: left;
-}
-
-/* =========================
-   ANIMATION
-========================= */
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 /* =========================
    RESPONSIVE
 ========================= */
@@ -318,5 +317,5 @@ button:hover {
   .container { padding: 30px; }
   .search-box { flex-direction: column; }
   .market-summary { grid-template-columns: 1fr; }
-  .modal-content { width: 92%; height: 60%; }
+  .quick-actions { flex-direction: column; }
 }
