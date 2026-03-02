@@ -1,6 +1,5 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 from typing import Dict
 
 from data.fetch_prices import get_stock_data
@@ -35,20 +34,18 @@ def root():
     }
 
 # =========================
-# STOCK ANALYSIS (SAFE)
+# STOCK ANALYSIS (SAFE & UPGRADED)
 # =========================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
 
     symbol = symbol.upper()
 
-    prices = []
     try:
         prices = get_stock_data(symbol)
     except:
         prices = []
 
-    # Always return stable response (NO 500 ERRORS)
     if not prices or len(prices) < 20:
         return {
             "symbol": symbol,
@@ -61,7 +58,6 @@ def analyze(symbol: str):
             "model_mae": 0
         }
 
-    # Safe prediction
     try:
         prediction, mae = predict_trend(prices)
     except:
@@ -77,13 +73,23 @@ def analyze(symbol: str):
     except:
         risk = "Unknown"
 
-    # Signal Logic
-    if prediction > 0.005 and sentiment > 0:
-        signal = "BUY"
-    elif prediction < -0.005 and sentiment < 0:
-        signal = "SELL"
+    # 🔥 Improved Signal Logic
+
+    # If Index or Commodity → use prediction only
+    if symbol.startswith("^") or symbol in ["GC=F", "SI=F"]:
+        if prediction > 0.003:
+            signal = "BUY"
+        elif prediction < -0.003:
+            signal = "SELL"
+        else:
+            signal = "HOLD"
     else:
-        signal = "HOLD"
+        if prediction > 0.005 and sentiment > 0:
+            signal = "BUY"
+        elif prediction < -0.005 and sentiment < 0:
+            signal = "SELL"
+        else:
+            signal = "HOLD"
 
     buy_score = normalize_buy_score(prediction, sentiment)
 
@@ -140,14 +146,19 @@ def market_news():
 
 
 # =========================
-# MARKET SENTIMENT
+# MARKET SENTIMENT (INCLUDES INDIA + GOLD)
 # =========================
 @app.get("/market-sentiment")
 def market_sentiment():
 
-    symbols = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN"]
+    symbols = [
+        "AAPL", "MSFT", "TSLA", "NVDA",
+        "RELIANCE.NS", "TCS.NS",
+        "GC=F"
+    ]
 
     sentiments = []
+
     for s in symbols:
         try:
             sentiments.append(analyze_sentiment(s))

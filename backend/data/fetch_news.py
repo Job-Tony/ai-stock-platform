@@ -1,17 +1,17 @@
 import requests
 from config import FINNHUB_API_KEY
 
-
 def fetch_news(symbol: str):
-    """
-    Fetch news headlines for a stock using Finnhub API.
 
-    Returns:
-    {
-        "sentiment": float,   # placeholder (we use VADER later)
-        "headlines": list[str]
-    }
-    """
+    # Handle indices & commodities separately
+    if symbol.startswith("^") or symbol in ["GC=F", "SI=F"]:
+        return {
+            "sentiment": 0.0,
+            "headlines": [
+                "Global market conditions impacting index movement",
+                "Macroeconomic data influencing overall trend"
+            ]
+        }
 
     if not FINNHUB_API_KEY:
         return {"sentiment": 0.0, "headlines": []}
@@ -20,7 +20,7 @@ def fetch_news(symbol: str):
 
     params = {
         "symbol": symbol,
-        "from": "2024-01-01",   # you can dynamically compute this later
+        "from": "2024-01-01",
         "to": "2026-12-31",
         "token": FINNHUB_API_KEY
     }
@@ -38,6 +38,6 @@ def fetch_news(symbol: str):
             headlines.append(item["headline"])
 
     return {
-        "sentiment": 0.0,  # We let VADER compute real sentiment
+        "sentiment": 0.0,
         "headlines": headlines
     }

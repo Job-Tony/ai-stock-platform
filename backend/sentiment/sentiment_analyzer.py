@@ -6,42 +6,45 @@ analyzer = SentimentIntensityAnalyzer()
 
 def analyze_sentiment(symbol: str) -> float:
     """
-    Returns sentiment score between -1 and +1
-    Combines VADER + API sentiment
-    Filters neutral noise
+    Returns sentiment score between -1 and +1.
+    Handles indices & commodities safely.
+    Combines VADER + API sentiment.
     """
 
     try:
+        symbol = symbol.upper()
+
+        # Indices & commodities → neutral baseline
+        if symbol.startswith("^") or symbol in ["GC=F", "SI=F"]:
+            return 0.0
+
         news_data = fetch_news(symbol)
 
         headlines = news_data.get("headlines", [])
         api_sentiment = float(news_data.get("sentiment", 0.0))
 
         if not headlines:
-            return round(api_sentiment, 3)
+            return 0.0
 
         vader_scores = []
 
         for text in headlines:
             score = analyzer.polarity_scores(text)["compound"]
 
-            # Filter weak neutral noise
             if abs(score) >= 0.05:
                 vader_scores.append(score)
 
         if not vader_scores:
-            vader_avg = 0.0
-        else:
-            vader_avg = sum(vader_scores) / len(vader_scores)
+            return 0.0
 
-        # Weighted fusion
-        combined = (vader_avg * 0.65) + (api_sentiment * 0.35)
+        vader_avg = sum(vader_scores) / len(vader_scores)
 
-        # Clamp range safely
+        # Stronger weight to VADER since API sentiment is 0
+        combined = (vader_avg * 0.75) + (api_sentiment * 0.25)
+
         combined = max(-1.0, min(1.0, combined))
 
         return round(combined, 3)
 
-    except Exception as e:
-        print("Sentiment error:", e)
+    except Exception:
         return 0.0
