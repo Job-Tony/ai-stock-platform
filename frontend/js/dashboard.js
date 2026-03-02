@@ -1,7 +1,48 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
-const DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"];
+
+const DEFAULT_STOCKS = [
+  "AAPL", "MSFT", "TSLA", "NVDA",
+  "RELIANCE.NS", "TCS.NS",
+  "GC=F", "SI=F",
+  "^NSEI", "^BSESN"
+];
 
 let expandedChartInstance = null;
+
+/* =========================
+   LOGO + SYMBOL FORMAT
+========================= */
+function getLogo(sym) {
+  const map = {
+    AAPL: "https://logo.clearbit.com/apple.com",
+    MSFT: "https://logo.clearbit.com/microsoft.com",
+    TSLA: "https://logo.clearbit.com/tesla.com",
+    NVDA: "https://logo.clearbit.com/nvidia.com",
+    RELIANCE: "https://logo.clearbit.com/ril.com",
+    TCS: "https://logo.clearbit.com/tcs.com",
+
+    "^BSESN": "https://upload.wikimedia.org/wikipedia/commons/5/5e/BSE_India_logo.svg",
+    "^NSEI": "https://upload.wikimedia.org/wikipedia/commons/7/70/National_Stock_Exchange_of_India_logo.svg",
+
+    "GC=F": "https://cdn-icons-png.flaticon.com/512/272/272525.png",
+    "SI=F": "https://cdn-icons-png.flaticon.com/512/272/272525.png"
+  };
+
+  const clean = sym.replace(".NS", "");
+  return map[clean] || "";
+}
+
+function formatSymbol(sym) {
+  if (sym === "^BSESN") return "SENSEX";
+  if (sym === "^NSEI") return "NIFTY 50";
+  if (sym === "GC=F") return "GOLD";
+  if (sym === "SI=F") return "SILVER";
+  return sym;
+}
+
+function safeId(sym) {
+  return sym.replace(/[^a-zA-Z0-9]/g, "");
+}
 
 /* =========================
    ON LOAD
@@ -16,20 +57,26 @@ document.addEventListener("DOMContentLoaded", () => {
    LOAD MARKET OVERVIEW
 ========================= */
 async function loadDefaultStocks() {
+
   const container = document.getElementById("default-stocks");
   container.innerHTML = "";
 
   for (const sym of DEFAULT_STOCKS) {
+
+    const id = safeId(sym);
 
     const card = document.createElement("div");
     card.className = "stock-card";
     card.onclick = () => expandChart(sym);
 
     card.innerHTML = `
-      <h3>${sym}</h3>
+      <div class="card-header">
+        <img src="${getLogo(sym)}" class="stock-logo"/>
+        <h3>${formatSymbol(sym)}</h3>
+      </div>
 
       <div class="mini-chart">
-        <canvas id="chart-${sym}"></canvas>
+        <canvas id="chart-${id}"></canvas>
       </div>
 
       <div class="expanded-info">
@@ -41,18 +88,21 @@ async function loadDefaultStocks() {
 
     container.appendChild(card);
 
-    renderMiniChart(`chart-${sym}`, sym);
+    renderMiniChart(`chart-${id}`, sym);
 
     /* LOAD SIGNAL */
     fetch(`${API_BASE}/analyze/${sym}`)
       .then(res => res.json())
       .then(data => {
         const signalEl = card.querySelector(".mini-signal");
+        if (!data.signal) throw new Error();
         signalEl.textContent = data.signal;
         signalEl.className = "mini-signal " + data.signal;
       })
       .catch(() => {
-        card.querySelector(".mini-signal").textContent = "ERR";
+        const signalEl = card.querySelector(".mini-signal");
+        signalEl.textContent = "HOLD";
+        signalEl.className = "mini-signal HOLD";
       });
 
     /* LOAD NEWS */
@@ -166,7 +216,6 @@ async function renderMiniChart(canvasId, symbol) {
   try {
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
     const rawData = await res.json();
-
     const data = rawData.filter(p => p.Close && p.Close > 0);
 
     const ctx = document.getElementById(canvasId).getContext("2d");
@@ -193,14 +242,13 @@ async function renderMiniChart(canvasId, symbol) {
         }
       }
     });
-
   } catch (err) {
     console.log("Mini chart error:", err);
   }
 }
 
 /* =========================
-   EXPANDED CHART MODAL
+   EXPANDED CHART
 ========================= */
 async function expandChart(symbol) {
 
@@ -223,42 +271,24 @@ async function expandChart(symbol) {
       data: {
         labels: data.map(p => p.date),
         datasets: [{
-          label: `${symbol} Price`,
+          label: `${formatSymbol(symbol)} Price`,
           data: data.map(p => p.Close),
           borderColor: "#22c55e",
           borderWidth: 2,
-          tension: 0.25,
-          pointRadius: 2,
-          fill: false
+          tension: 0.3,
+          pointRadius: 2
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-
-        interaction: {
-          mode: "index",
-          intersect: false
-        },
-
+        interaction: { mode: "index", intersect: false },
         plugins: {
-          legend: {
-            labels: { color: "#e5e7eb" }
-          },
-          tooltip: {
-            enabled: true
-          }
+          legend: { labels: { color: "#e5e7eb" } }
         },
-
         scales: {
-          x: {
-            ticks: { color: "#94a3b8", maxTicksLimit: 8 },
-            grid: { color: "rgba(255,255,255,0.05)" }
-          },
-          y: {
-            ticks: { color: "#94a3b8" },
-            grid: { color: "rgba(255,255,255,0.05)" }
-          }
+          x: { ticks: { color: "#94a3b8" } },
+          y: { ticks: { color: "#94a3b8" } }
         }
       }
     });

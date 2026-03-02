@@ -492,3 +492,15 @@ button:hover {
 .final-cta button {
   animation: pulseGlow 3s infinite;
 }
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.stock-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
