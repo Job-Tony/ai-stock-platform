@@ -13,132 +13,135 @@ from chatbot.advisor_bot import chatbot_reply
 
 app = FastAPI(title="AI Stock Investment Platform API")
 
-# ======================================
+# =========================
 # CORS
-# ======================================
+# =========================
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # You can restrict later
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ======================================
+# =========================
 # ROOT
-# ======================================
+# =========================
 @app.get("/")
 def root():
     return {
         "status": "running",
-        "api": "AI Stock Investment Platform",
-        "available_endpoints": [
-            "/analyze/{symbol}",
-            "/prices/{symbol}",
-            "/news/{symbol}",
-            "/market-news",
-            "/market-sentiment",
-            "/trade",
-            "/portfolio"
-        ]
+        "api": "AI Stock Investment Platform"
     }
 
-
-# ======================================
-# STOCK ANALYSIS
-# ======================================
+# =========================
+# STOCK ANALYSIS (SAFE)
+# =========================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
 
     symbol = symbol.upper()
 
+    prices = []
     try:
         prices = get_stock_data(symbol)
+    except:
+        prices = []
 
-        if not prices:
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "symbol": symbol,
-                    "error": "No price data available"
-                }
-            )
-
-        prediction, mae = predict_trend(prices)
-        sentiment = analyze_sentiment(symbol)
-        risk = calculate_risk(prices)
-
-        # Signal Logic
-        if prediction > 0.005 and sentiment > 0:
-            signal = "BUY"
-        elif prediction < -0.005 and sentiment < 0:
-            signal = "SELL"
-        else:
-            signal = "HOLD"
-
-        confidence = min(
-            100,
-            int((abs(prediction) + abs(sentiment)) * 5000)
-        )
-
-        buy_score = normalize_buy_score(prediction, sentiment)
-
+    # Always return stable response (NO 500 ERRORS)
+    if not prices or len(prices) < 20:
         return {
             "symbol": symbol,
-            "signal": signal,
-            "prediction": round(prediction, 4),
-            "sentiment": round(sentiment, 3),
-            "confidence": confidence,
-            "buy_score": buy_score,
-            "risk_level": risk,
-            "model_mae": mae
+            "signal": "HOLD",
+            "prediction": 0,
+            "sentiment": 0,
+            "confidence": 0,
+            "buy_score": 50,
+            "risk_level": "Unknown",
+            "model_mae": 0
         }
 
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"error": str(e)}
-        )
+    # Safe prediction
+    try:
+        prediction, mae = predict_trend(prices)
+    except:
+        prediction, mae = 0, 0
+
+    try:
+        sentiment = analyze_sentiment(symbol)
+    except:
+        sentiment = 0
+
+    try:
+        risk = calculate_risk(prices)
+    except:
+        risk = "Unknown"
+
+    # Signal Logic
+    if prediction > 0.005 and sentiment > 0:
+        signal = "BUY"
+    elif prediction < -0.005 and sentiment < 0:
+        signal = "SELL"
+    else:
+        signal = "HOLD"
+
+    buy_score = normalize_buy_score(prediction, sentiment)
+
+    confidence = min(
+        100,
+        int((abs(prediction) + abs(sentiment)) * 5000)
+    )
+
+    return {
+        "symbol": symbol,
+        "signal": signal,
+        "prediction": round(prediction, 4),
+        "sentiment": round(sentiment, 3),
+        "confidence": confidence,
+        "buy_score": buy_score,
+        "risk_level": risk,
+        "model_mae": mae
+    }
 
 
-# ======================================
+# =========================
 # PRICE DATA
-# ======================================
+# =========================
 @app.get("/prices/{symbol}")
 def prices(symbol: str):
     symbol = symbol.upper()
     try:
         return get_stock_data(symbol) or []
-    except Exception:
+    except:
         return []
 
 
-# ======================================
-# STOCK NEWS
-# ======================================
+# =========================
+# NEWS
+# =========================
 @app.get("/news/{symbol}")
 def news(symbol: str):
     symbol = symbol.upper()
     try:
         return fetch_news(symbol)
-    except Exception:
+    except:
         return {"headlines": [], "sentiment": 0.0}
 
 
-# ======================================
+# =========================
 # MARKET NEWS
-# ======================================
+# =========================
 @app.get("/market-news")
 def market_news():
     try:
         return fetch_news("SPY")
-    except Exception:
+    except:
         return {"headlines": []}
 
 
-# ======================================
+# =========================
 # MARKET SENTIMENT
-# ======================================
+# =========================
 @app.get("/market-sentiment")
 def market_sentiment():
 
@@ -148,8 +151,8 @@ def market_sentiment():
     for s in symbols:
         try:
             sentiments.append(analyze_sentiment(s))
-        except Exception:
-            continue
+        except:
+            pass
 
     if not sentiments:
         return {"value": 0, "mood": "Unavailable"}
@@ -169,9 +172,9 @@ def market_sentiment():
     }
 
 
-# ======================================
+# =========================
 # PAPER TRADING
-# ======================================
+# =========================
 @app.post("/trade")
 def trade(order: Dict):
     return execute_trade(order)
@@ -182,9 +185,9 @@ def portfolio():
     return get_portfolio_summary()
 
 
-# ======================================
+# =========================
 # CHATBOT
-# ======================================
+# =========================
 @app.post("/chat")
 def chat(data: Dict):
     message = data.get("message", "")
@@ -194,15 +197,11 @@ def chat(data: Dict):
     return {"reply": chatbot_reply(message)}
 
 
-# ======================================
-# BUY SCORE NORMALIZATION
-# ======================================
+# =========================
+# BUY SCORE
+# =========================
 def normalize_buy_score(prediction: float, sentiment: float) -> int:
-
     score = (prediction * 0.7) + (sentiment * 0.3)
-
     score = max(-0.05, min(0.05, score))
-
     normalized = int(((score + 0.05) / 0.10) * 100)
-
     return normalized
