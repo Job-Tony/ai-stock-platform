@@ -436,3 +436,141 @@ button:hover {
   transform: scale(1.1);
   box-shadow: 0 0 15px var(--accent-glow);
 }
+
+/* =========================================
+   ENHANCED BUTTON ALIGNMENTS & STRUCTURE
+========================================= */
+
+/* Ensure all buttons are perfectly centered internally */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  text-align: center;
+}
+
+/* Make search button same height as input */
+.search-box {
+  align-items: center;
+}
+
+.search-box input,
+.search-box button {
+  height: 48px;
+}
+
+/* Improve quick action buttons layout */
+.quick-actions {
+  align-items: stretch;
+}
+
+.quick-actions a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 180px;
+  min-height: 90px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+/* Add subtle hover lift depth */
+.quick-actions a:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+/* Better hero button alignment */
+.hero-buttons {
+  align-items: center;
+}
+
+.hero-buttons a button {
+  min-width: 180px;
+}
+
+/* Improve close button positioning */
+.close-btn {
+  top: 18px;
+  right: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Improve button spacing globally */
+button + button {
+  margin-left: 10px;
+}
+
+/* Add better mobile stacking behavior */
+@media (max-width: 768px) {
+
+  .hero-buttons {
+    flex-direction: column;
+  }
+
+  .quick-actions {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .quick-actions a {
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .search-box button {
+    width: 100%;
+  }
+}
+
+/* =========================================
+   HOVER-ONLY NEWS DISPLAY (SMOOTH)
+========================================= */
+
+/* Hide news section by default */
+.stock-card .expanded-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(10px);
+
+  padding: 18px;
+  border-top: 1px solid var(--glass-border);
+
+  transform: translateY(100%);
+  opacity: 0;
+
+  transition: all 0.35s ease;
+}
+
+/* Make card relative for positioning */
+.stock-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Show news only on hover */
+.stock-card:hover .expanded-info {
+  transform: translateY(0%);
+  opacity: 1;
+}
+
+/* Optional: Dim chart slightly when hover */
+.stock-card:hover .mini-chart {
+  filter: blur(2px) brightness(0.8);
+  transition: 0.3s ease;
+}
+
+/* Improve news text look */
+.expanded-info .news {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
