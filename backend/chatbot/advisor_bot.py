@@ -5,57 +5,102 @@ from ml.random_forest import predict_trend
 from ml.risk_analyzer import calculate_risk
 
 
+def detect_symbol(message: str):
+    """
+    Try to detect stock ticker in message.
+    Supports common US tickers (1–5 uppercase letters).
+    """
+    matches = re.findall(r"\b[A-Z]{1,5}\b", message.upper())
+    if matches:
+        return matches[0]
+    return None
+
+
+def generate_signal(prediction, sentiment):
+    if prediction > 0.005 and sentiment > 0:
+        return "BUY"
+    elif prediction < -0.005 and sentiment < 0:
+        return "SELL"
+    else:
+        return "HOLD"
+
+
 def chatbot_reply(message: str) -> str:
 
-    message = message.upper()
+    message = message.strip().upper()
 
-    # Try detect stock symbol (simple detection)
-    symbols = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"]
+    # Detect ticker
+    symbol = detect_symbol(message)
 
-    for sym in symbols:
-        if sym in message:
-            prices = get_stock_data(sym)
+    if symbol:
 
-            if not prices:
-                return f"No data available for {sym}."
+        prices = get_stock_data(symbol)
 
-            prediction, _ = predict_trend(prices)
-            sentiment = analyze_sentiment(sym)
-            risk = calculate_risk(prices)
+        if not prices:
+            return f"❌ No data available for {symbol}. Try a valid ticker."
 
-            if prediction > 0.005 and sentiment > 0:
-                signal = "BUY"
-            elif prediction < -0.005 and sentiment < 0:
-                signal = "SELL"
-            else:
-                signal = "HOLD"
+        prediction, _ = predict_trend(prices)
+        sentiment = analyze_sentiment(symbol)
+        risk = calculate_risk(prices)
 
-            return (
-                f"📊 {sym} Analysis:\n\n"
-                f"• Predicted Trend: {round(prediction,4)}\n"
-                f"• Sentiment Score: {round(sentiment,3)}\n"
-                f"• Risk Level: {risk}\n\n"
-                f"👉 Current Recommendation: {signal}"
-            )
+        signal = generate_signal(prediction, sentiment)
 
-    # If no symbol detected
-    if "BEST STOCK" in message or "WHICH STOCK" in message:
+        buy_score = int(((prediction * 0.7 + sentiment * 0.3) + 0.05) / 0.10 * 100)
+        buy_score = max(0, min(100, buy_score))
 
-        return (
-            "I recommend checking the dashboard 🔥\n\n"
-            "Look for stocks with:\n"
-            "• BUY signal\n"
-            "• Buy score above 70\n"
-            "• Positive sentiment\n"
-            "• Moderate/Low risk\n\n"
-            "You can ask about a specific symbol like:\n"
-            "👉 'Is TSLA a good buy?'"
-        )
+        return f"""
+📊 {symbol} Analysis
 
-    return (
-        "I can analyze specific stocks for you.\n"
-        "Try asking:\n"
-        "• 'Is AAPL a good buy?'\n"
-        "• 'Should I sell TSLA?'\n"
-        "• 'Risk level of NVDA?'\n"
-    )
+Prediction Trend: {round(prediction,4)}
+Sentiment Score: {round(sentiment,3)}
+Risk Level: {risk}
+Buy Score: {buy_score}/100
+
+👉 Recommendation: {signal}
+        """
+
+    # If asking which stock to buy
+    if "WHICH STOCK" in message or "BEST STOCK" in message:
+
+        top_candidates = ["AAPL", "MSFT", "TSLA", "NVDA"]
+
+        best_symbol = None
+        best_score = -1
+
+        for sym in top_candidates:
+            try:
+                prices = get_stock_data(sym)
+                prediction, _ = predict_trend(prices)
+                sentiment = analyze_sentiment(sym)
+
+                score = prediction * 0.7 + sentiment * 0.3
+
+                if score > best_score:
+                    best_score = score
+                    best_symbol = sym
+            except:
+                continue
+
+        if best_symbol:
+            return f"""
+🔥 Based on current AI analysis:
+
+👉 {best_symbol} looks strongest right now.
+
+Type:
+• 'Analyze {best_symbol}'
+to see full breakdown.
+            """
+
+        return "Unable to determine best stock right now."
+
+    # Default fallback
+    return """
+I can analyze any stock for you 📈
+
+Try:
+• 'Is AAPL a good buy?'
+• 'Analyze TSLA'
+• 'Should I sell NVDA?'
+• 'Risk level of MSFT?'
+"""
