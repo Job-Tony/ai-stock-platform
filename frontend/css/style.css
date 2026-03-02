@@ -403,3 +403,92 @@ button:hover {
   .market-summary { grid-template-columns: 1fr; }
   .quick-actions { flex-direction: column; }
 }
+
+/* =========================
+   LANDING PAGE STYLING
+========================= */
+
+.landing {
+  text-align: center;
+}
+
+/* Hero Buttons */
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin-top: 25px;
+  margin-bottom: 60px;
+}
+
+.hero-buttons a {
+  text-decoration: none;
+}
+
+/* Features Section */
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 28px;
+  margin-bottom: 60px;
+}
+
+.feature-card {
+  padding: 25px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  text-align: left;
+  transition: 0.3s ease;
+}
+
+.feature-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65);
+}
+
+.feature-card h3 {
+  margin-bottom: 12px;
+}
+
+/* How It Works */
+.how-it-works {
+  margin-bottom: 60px;
+  padding: 30px;
+  border-radius: 22px;
+  background: var(--card-bg);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.how-it-works h2 {
+  margin-bottom: 20px;
+}
+
+/* Final CTA */
+.final-cta {
+  margin-top: 40px;
+  padding: 40px;
+  border-radius: 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(34,197,94,0.1),
+    rgba(34,197,94,0.05)
+  );
+  border: 1px solid var(--accent);
+}
+
+.final-cta h3 {
+  margin-bottom: 20px;
+}
+
+/* Optional subtle glow animation */
+@keyframes pulseGlow {
+  0% { box-shadow: 0 0 0 rgba(34,197,94,0.3); }
+  50% { box-shadow: 0 0 30px rgba(34,197,94,0.4); }
+  100% { box-shadow: 0 0 0 rgba(34,197,94,0.3); }
+}
+
+.final-cta button {
+  animation: pulseGlow 3s infinite;
+}
