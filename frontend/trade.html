@@ -16,7 +16,7 @@
       Simulate trades safely with virtual capital
     </p>
 
-    <div class="card trade-card">
+    <div class="trade-card">
 
       <input
         id="tradeSymbol"
@@ -30,8 +30,6 @@
         placeholder="Quantity"
         min="1"
       />
-
-      <!-- Price removed (backend auto-fetches live price) -->
 
       <div class="trade-actions">
         <button onclick="placeTrade('buy')" class="buy">
@@ -74,11 +72,10 @@
       resultBox.innerHTML = "Processing trade...";
 
       try {
+
         const response = await fetch(`${API_BASE}/trade`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             symbol: symbol,
             action: action,
@@ -89,28 +86,46 @@
         const data = await response.json();
 
         if (data.status === "error") {
-          resultBox.innerHTML = `
-            ❌ ${data.message}
-          `;
+          resultBox.innerHTML = `<p style="color:#ef4444">${data.message}</p>`;
           return;
         }
 
         const portfolio = data.portfolio;
 
+        const price = Number(data.trade.price).toFixed(2);
+        const balance = Number(portfolio.balance).toFixed(2);
+        const totalValue = Number(portfolio.total_value).toFixed(2);
+
         resultBox.innerHTML = `
-          ✅ <b>${data.trade.action.toUpperCase()}</b> executed at 
-          $${data.trade.price} <br><br>
+          <div class="trade-success ${action}">
+            ${action.toUpperCase()} executed at $${price}
+          </div>
 
-          💰 <b>Balance:</b> $${portfolio.balance} <br>
-          📊 <b>Total Value:</b> $${portfolio.total_value} <br><br>
+          <div class="portfolio-summary">
+            <div class="summary-card">
+              <h4>Balance</h4>
+              <p>$${balance}</p>
+            </div>
 
-          📌 <b>Holdings:</b> <br>
-          ${portfolio.holdings.length === 0 
-            ? "No holdings"
-            : portfolio.holdings.map(h =>
-                `${h.symbol} — ${h.quantity} shares ($${h.value})`
-              ).join("<br>")
-          }
+            <div class="summary-card">
+              <h4>Total Portfolio Value</h4>
+              <p>$${totalValue}</p>
+            </div>
+          </div>
+
+          <div class="holdings-box">
+            <h4>📌 Holdings</h4>
+            ${
+              portfolio.holdings.length === 0
+              ? "<p>No holdings</p>"
+              : portfolio.holdings.map(h => `
+                  <div class="holding-item">
+                    <span>${h.symbol} (${h.quantity} shares)</span>
+                    <span>$${Number(h.value).toFixed(2)}</span>
+                  </div>
+                `).join("")
+            }
+          </div>
         `;
 
       } catch (err) {
