@@ -1,15 +1,24 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 
+const input = document.getElementById("userMessage");
+const chatBox = document.getElementById("chatBox");
+
+input.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    sendMessage();
+  }
+});
+
 async function sendMessage() {
-  const input = document.getElementById("userMessage");
-  const chatBox = document.getElementById("chatBox");
 
   const message = input.value.trim();
   if (!message) return;
 
-  chatBox.innerHTML += `<div class="user-msg">🧑 ${message}</div>`;
+  appendMessage(message, "user-msg");
   input.value = "";
-  chatBox.scrollTop = chatBox.scrollHeight;
+
+  // Bot typing indicator
+  const typing = appendMessage("Thinking...", "bot-msg");
 
   try {
     const res = await fetch(`${API_BASE}/chat`, {
@@ -18,14 +27,26 @@ async function sendMessage() {
       body: JSON.stringify({ message })
     });
 
-    if (!res.ok) throw new Error("Backend error");
-
     const data = await res.json();
 
-    chatBox.innerHTML += `<div class="bot-msg">🤖 ${data.reply}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
+    typing.remove();
+    appendMessage(data.reply, "bot-msg");
 
   } catch (err) {
-    chatBox.innerHTML += `<div class="error-msg">❌ Chatbot unavailable</div>`;
+    typing.remove();
+    appendMessage("⚠️ Server error. Try again later.", "bot-msg");
   }
+}
+
+function appendMessage(text, className) {
+  const div = document.createElement("div");
+  div.className = className;
+  div.innerHTML = text;
+
+  chatBox.appendChild(div);
+
+  // auto scroll
+  chatBox.scrollTop = chatBox.scrollHeight;
+
+  return div;
 }
