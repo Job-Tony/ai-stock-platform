@@ -66,11 +66,38 @@ def analyze(symbol: str):
         prediction, mae = 0, 0
 
     # ---------- SENTIMENT ----------
+    # ---------- SENTIMENT ----------
     try:
-        sentiment = analyze_sentiment(symbol)
+
+        # If NIFTY index
+        if symbol == "^NSEI":
+            components = [
+                "RELIANCE.NS",
+                "HDFCBANK.NS",
+                "INFY.NS",
+                "TCS.NS",
+                "ICICIBANK.NS"
+            ]
+            values = [analyze_sentiment(s) for s in components]
+            sentiment = sum(values) / len(values)
+
+        # If SENSEX index
+        elif symbol == "^BSESN":
+            components = [
+                "RELIANCE.NS",
+                "HDFCBANK.NS",
+                "INFY.NS"
+            ]
+            values = [analyze_sentiment(s) for s in components]
+            sentiment = sum(values) / len(values)
+
+        # Normal stocks / crypto
+        else:
+            sentiment = analyze_sentiment(symbol)
+
     except:
         sentiment = 0
-
+        
     # ---------- RISK ----------
     try:
         risk = calculate_risk(prices)
