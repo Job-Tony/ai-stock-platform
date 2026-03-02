@@ -1,193 +1,162 @@
-import re
-from data.fetch_prices import get_stock_data
 from sentiment.sentiment_analyzer import analyze_sentiment
 from ml.random_forest import predict_trend
-from ml.risk_analyzer import calculate_risk
+from data.fetch_prices import get_stock_data
 
-# ===============================
-# GLOBAL STOCK LIST
-# ===============================
+def chatbot_reply(message: str) -> str:
 
-DEFAULT_STOCKS = [
+    message = message.lower().strip()
 
-    # 🇺🇸 US Tech
-    "AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL",
-    "META", "NFLX",
+    # ---------------------------------------------------
+    # STOCK EDUCATION
+    # ---------------------------------------------------
 
-    # 🇺🇸 Blue-chip
-    "JPM", "V", "WMT", "KO",
+    if "what is stock" in message or "what are stocks" in message:
+        return (
+            "A stock represents partial ownership in a company. "
+            "When you buy a stock, you own a small portion of that company. "
+            "Stock prices change based on company performance, investor sentiment, "
+            "market conditions, earnings reports, and macroeconomic factors."
+        )
 
-    # 🇺🇸 ETFs
-    "SPY", "QQQ",
+    if "what is sentiment" in message:
+        return (
+            "Market sentiment measures how investors feel about a stock. "
+            "Positive sentiment suggests optimism (bullish), "
+            "while negative sentiment suggests fear (bearish). "
+            "We calculate sentiment using VADER NLP on financial news headlines."
+        )
 
-    # 🇮🇳 Indian Stocks
-    "RELIANCE.NS",
-    "TCS.NS",
-    "INFY.NS",
-    "HDFCBANK.NS",
-    "ICICIBANK.NS",
-    "SBIN.NS",
-    "ITC.NS",
+    # ---------------------------------------------------
+    # COMPARISON LOGIC
+    # ---------------------------------------------------
 
-    # 🇮🇳 Indices
-    "^NSEI",      # NIFTY 50
-    "^BSESN",     # SENSEX
+    if "compare" in message:
 
-    # 🪙 Commodities
-    "GC=F",       # Gold
-    "SI=F",       # Silver
-]
+        words = message.upper().split()
+        symbols = [w for w in words if w.isalpha() and len(w) <= 6]
+
+        if len(symbols) < 2:
+            return "Please specify two stock symbols to compare. Example: Compare AAPL and MSFT"
+
+        s1, s2 = symbols[0], symbols[1]
+
+        return compare_stocks(s1, s2)
+
+    # ---------------------------------------------------
+    # BUY / SELL / HOLD QUESTIONS
+    # ---------------------------------------------------
+
+    if "buy" in message or "sell" in message or "hold" in message:
+
+        words = message.upper().split()
+        symbols = [w for w in words if w.isalpha() and len(w) <= 7]
+
+        if not symbols:
+            return "Please specify a stock symbol. Example: Should I buy AAPL?"
+
+        symbol = symbols[-1]
+
+        return analyze_stock(symbol)
+
+    # ---------------------------------------------------
+    # WHICH STOCK IS BETTER
+    # ---------------------------------------------------
+
+    if "which" in message and "better" in message:
+        words = message.upper().split()
+        symbols = [w for w in words if w.isalpha() and len(w) <= 6]
+
+        if len(symbols) >= 2:
+            return compare_stocks(symbols[0], symbols[1])
+
+    # ---------------------------------------------------
+    # DEFAULT FALLBACK
+    # ---------------------------------------------------
+
+    return (
+        "You can ask me things like:\n"
+        "- Should I buy AAPL?\n"
+        "- Compare TSLA and NVDA\n"
+        "- Which is better MSFT or GOOGL?\n"
+        "- What is market sentiment?\n"
+        "- Explain volatility risk"
+    )
 
 
-# ===============================
-# SAFE SYMBOL EXTRACTION
-# ===============================
+# ========================================================
+# HELPER: ANALYZE ONE STOCK
+# ========================================================
 
-def extract_symbol(message: str):
-    msg = message.upper()
-    for sym in DEFAULT_STOCKS:
-        if sym in msg:
-            return sym
-    return None
-
-
-# ===============================
-# SIGNAL LOGIC
-# ===============================
-
-def generate_signal(prediction, sentiment):
-    if prediction > 0.005 and sentiment > 0:
-        return "BUY"
-    elif prediction < -0.005 and sentiment < 0:
-        return "SELL"
-    else:
-        return "HOLD"
-
-
-# ===============================
-# STOCK ANALYSIS
-# ===============================
-
-def explain_stock(symbol):
+def analyze_stock(symbol: str):
 
     prices = get_stock_data(symbol)
 
     if not prices or len(prices) < 20:
-        return f"⚠ Not enough data available for {symbol}. Try another ticker."
+        return f"I don't have enough data to analyze {symbol}."
 
     prediction, _ = predict_trend(prices)
     sentiment = analyze_sentiment(symbol)
-    risk = calculate_risk(prices)
 
-    signal = generate_signal(prediction, sentiment)
+    signal = "HOLD"
 
-    return f"""
-📊 Detailed AI Analysis for {symbol}
+    if prediction > 0.005 and sentiment > 0:
+        signal = "BUY"
+    elif prediction < -0.005 and sentiment < 0:
+        signal = "SELL"
 
-Trend Prediction: {round(prediction,4)}
-News Sentiment: {round(sentiment,3)}
-Risk Level: {risk}
+    explanation = (
+        f"Stock: {symbol}\n\n"
+        f"Prediction Trend: {round(prediction*100,2)}%\n"
+        f"Sentiment Score: {sentiment}\n\n"
+        f"Recommendation: {signal}\n\n"
+    )
 
-Explanation:
-• Trend indicates {'upward strength' if prediction > 0 else 'downward pressure'}.
-• Sentiment shows {'positive' if sentiment > 0 else 'negative' if sentiment < 0 else 'neutral'} tone.
-• Risk measures volatility behavior.
+    if signal == "BUY":
+        explanation += (
+            "The model predicts upward price movement combined "
+            "with positive market sentiment. This indicates bullish momentum."
+        )
+    elif signal == "SELL":
+        explanation += (
+            "The model predicts downside movement and sentiment "
+            "is negative. This suggests bearish pressure."
+        )
+    else:
+        explanation += (
+            "The indicators are mixed or neutral. It may be better "
+            "to wait for clearer signals."
+        )
 
-Final AI Recommendation → {signal}
-
-Decision based on Machine Learning + NLP Sentiment + Risk Modeling.
-"""
-
-
-# ===============================
-# RANK ALL STOCKS
-# ===============================
-
-def compare_stocks():
-
-    results = []
-
-    for sym in DEFAULT_STOCKS:
-        try:
-            prices = get_stock_data(sym)
-            if not prices or len(prices) < 20:
-                continue
-
-            prediction, _ = predict_trend(prices)
-            sentiment = analyze_sentiment(sym)
-
-            score = prediction * 0.7 + sentiment * 0.3
-            results.append((sym, score))
-
-        except:
-            continue
-
-    if not results:
-        return "⚠ Unable to analyze market currently."
-
-    results.sort(key=lambda x: x[1], reverse=True)
-
-    best = results[0]
-    worst = results[-1]
-
-    return f"""
-📈 Global Market Ranking
-
-🔥 Strongest Asset: {best[0]}
-⚠ Weakest Asset: {worst[0]}
-
-Ranking calculated using trend + sentiment scoring model.
-"""
+    return explanation
 
 
-# ===============================
-# CHATBOT MAIN
-# ===============================
+# ========================================================
+# HELPER: COMPARE TWO STOCKS
+# ========================================================
 
-def chatbot_reply(message: str):
+def compare_stocks(s1: str, s2: str):
 
-    msg = message.upper()
+    p1 = get_stock_data(s1)
+    p2 = get_stock_data(s2)
 
-    if "WHAT IS STOCK" in msg:
-        return """
-A stock represents ownership in a company.
+    if not p1 or not p2:
+        return "Unable to fetch data for comparison."
 
-When you buy stock:
-• You own part of the business
-• You benefit from growth
-• You may receive dividends
+    pred1, _ = predict_trend(p1)
+    pred2, _ = predict_trend(p2)
 
-Stock prices move based on performance, news, and investor demand.
-"""
+    sent1 = analyze_sentiment(s1)
+    sent2 = analyze_sentiment(s2)
 
-    if "RISK" in msg:
-        return """
-Risk measures volatility.
+    score1 = pred1 + sent1
+    score2 = pred2 + sent2
 
-Low Risk → Stable movement
-High Risk → Large price swings
+    better = s1 if score1 > score2 else s2
 
-Higher risk can mean higher returns but higher losses.
-"""
-
-    if "HOW MARKET WORK" in msg:
-        return """
-Markets operate on demand and supply.
-
-Price rises → More buyers
-Price falls → More sellers
-
-Markets react to earnings, news, interest rates, and global events.
-"""
-
-    symbol = extract_symbol(msg)
-    if symbol:
-        return explain_stock(symbol)
-
-    if "BUY" in msg or "BEST" in msg or "WHICH" in msg:
-        return compare_stocks()
-
-    if "SELL" in msg:
-        return compare_stocks()
-
-    return "Ask me to analyze AAPL, RELIANCE.NS, GC=F, ^BSESN or compare stocks."
+    return (
+        f"Comparison: {s1} vs {s2}\n\n"
+        f"{s1} → Trend: {round(pred1*100,2)}%, Sentiment: {sent1}\n"
+        f"{s2} → Trend: {round(pred2*100,2)}%, Sentiment: {sent2}\n\n"
+        f"Overall, {better} currently shows stronger combined "
+        f"technical momentum and sentiment."
+    )
