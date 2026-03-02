@@ -1,57 +1,39 @@
 import requests
 from config import FINNHUB_API_KEY
+from datetime import datetime, timedelta
 
 
 def fetch_news(symbol: str):
-    """
-    Fetch news headlines for a symbol.
-    Returns dict with:
-    {
-        "headlines": [...],
-        "sentiment": 0.0   # Sentiment handled by VADER later
-    }
-    """
 
     if not FINNHUB_API_KEY:
         return {"sentiment": 0.0, "headlines": []}
 
     symbol = symbol.upper()
 
-    # ==========================================
-    # 🔥 SMART INDEX HANDLING
-    # ==========================================
-
-    # Indian indices → use NIFTY ETF proxy
+    # Index proxies
     if symbol == "^NSEI":
-        symbol = "NIFTYBEES.NS"
-
+        symbol = "NIFTYBEES"
     elif symbol == "^BSESN":
-        symbol = "SENSEXBEES.NS"
-
-    # US index example
+        symbol = "SENSEXBEES"
     elif symbol == "^GSPC":
         symbol = "SPY"
 
-    # Commodities fallback (still generic)
+    # Commodities → no direct news
     elif symbol in ["GC=F", "SI=F", "CL=F"]:
-        return {
-            "sentiment": 0.0,
-            "headlines": [
-                "Commodity markets reacting to macroeconomic data",
-                "Global supply-demand dynamics influencing prices"
-            ]
-        }
+        return {"sentiment": 0.0, "headlines": []}
 
-    # ==========================================
-    # FETCH NEWS
-    # ==========================================
+    # Remove .NS for finnhub
+    symbol = symbol.replace(".NS", "")
+
+    today = datetime.utcnow()
+    past = today - timedelta(days=30)
 
     url = "https://finnhub.io/api/v1/company-news"
 
     params = {
         "symbol": symbol,
-        "from": "2025-01-01",
-        "to": "2026-12-31",
+        "from": past.strftime("%Y-%m-%d"),
+        "to": today.strftime("%Y-%m-%d"),
         "token": FINNHUB_API_KEY
     }
 
@@ -61,13 +43,13 @@ def fetch_news(symbol: str):
     except Exception:
         return {"sentiment": 0.0, "headlines": []}
 
-    headlines = []
-
-    for item in data[:10]:
-        if isinstance(item, dict) and item.get("headline"):
-            headlines.append(item["headline"])
+    headlines = [
+        item["headline"]
+        for item in data
+        if isinstance(item, dict) and item.get("headline")
+    ]
 
     return {
-        "sentiment": 0.0,  # VADER computes real score
+        "sentiment": 0.0,
         "headlines": headlines
     }
