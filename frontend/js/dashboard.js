@@ -5,20 +5,24 @@ const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 =========================================== */
 const DEFAULT_STOCKS = [
   // 🇺🇸 US
-  "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL",
+  "AAPL",
+  "MSFT",
+  "NVDA",
+  "TSLA",
 
   // 🇮🇳 India
-  "RELIANCE.NS", "TCS.NS",
-  "HDFCBANK.NS", "INFY.NS",
+  "RELIANCE.NS",
+  "HDFCBANK.NS",
+  "INFY.NS",
 
-  // 📊 Indices
-  "^NSEI", "^BSESN",
+  // 📊 Index
+  "^NSEI",
 
   // 🥇 Gold
   "GC=F",
 
   // 🪙 Crypto
-  "BTC-USD", "ETH-USD"
+  "BTC-USD"
 ];
 
 let expandedChartInstance = null;
@@ -310,4 +314,60 @@ async function expandChart(symbol) {
 
 function closeModal() {
   document.getElementById("chart-modal").classList.remove("active");
+}
+
+/* =====================================================
+   SEARCH ANALYSIS FUNCTION
+===================================================== */
+async function analyzeStock() {
+
+  const symbolInput = document.getElementById("symbol");
+  const output = document.getElementById("output");
+
+  if (!symbolInput || !output) {
+    console.log("Missing input or output element");
+    return;
+  }
+
+  const symbol = symbolInput.value.trim().toUpperCase();
+
+  if (!symbol) {
+    output.innerHTML = "Please enter a symbol.";
+    return;
+  }
+
+  output.innerHTML = "Analyzing...";
+
+  try {
+    const res = await fetch(`${API_BASE}/analyze/${symbol}`);
+
+    if (!res.ok) {
+      throw new Error("API Error");
+    }
+
+    const data = await res.json();
+
+    let recommendation =
+      data.buy_score >= 75 ? "STRONG BUY" :
+      data.buy_score >= 60 ? "BUY" :
+      data.buy_score >= 45 ? "HOLD" : "SELL";
+
+    output.innerHTML = `
+      <h3>${symbol}</h3>
+      <p><b>Prediction:</b> ${data.prediction}</p>
+      <p><b>Sentiment:</b> ${data.sentiment}</p>
+      <p><b>Risk Level:</b> ${data.risk_level}</p>
+      <p><b>Model MAE:</b> ${data.model_mae}</p>
+      <p><b>Buy Score:</b> ${data.buy_score}</p>
+      <h2 style="margin-top:15px;">${recommendation}</h2>
+    `;
+
+    if (typeof renderMeter === "function") {
+      renderMeter(data.buy_score);
+    }
+
+  } catch (err) {
+    console.log("Analyze Error:", err);
+    output.innerHTML = "Error fetching data.";
+  }
 }
