@@ -3,8 +3,7 @@
 ========================= */
 :root {
   --bg-dark: #020617;
-  --bg-mid: #0f172a;
-  --card-bg: rgba(15, 23, 42, 0.9);
+  --card-bg: rgba(15, 23, 42, 0.92);
   --glass-border: rgba(255,255,255,0.08);
 
   --accent: #22c55e;
@@ -39,7 +38,7 @@ body {
 
   background:
     radial-gradient(circle at 15% 10%, #1e293b 0%, transparent 40%),
-    radial-gradient(circle at 80% 80%, #020617 0%, var(--bg-dark) 50%);
+    radial-gradient(circle at 85% 85%, #020617 0%, var(--bg-dark) 55%);
 
   display: flex;
   justify-content: center;
@@ -58,14 +57,15 @@ body {
 
   background: linear-gradient(
     180deg,
-    rgba(15,23,42,0.96),
-    rgba(2,6,23,0.96)
+    rgba(15,23,42,0.97),
+    rgba(2,6,23,0.97)
   );
 
   backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
 
   box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+
   text-align: center;
 }
 
@@ -80,7 +80,11 @@ h1 {
 .subtitle {
   font-size: 1rem;
   color: var(--text-muted);
-  margin-bottom: 35px;
+  margin-bottom: 40px;
+}
+
+.section-title {
+  margin-bottom: 25px;
 }
 
 /* =========================
@@ -90,8 +94,8 @@ h1 {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 25px;
-  margin: 0 auto 40px auto;
   max-width: 900px;
+  margin: 0 auto 40px auto;
 }
 
 .summary-box {
@@ -103,13 +107,13 @@ h1 {
 }
 
 .summary-box h4 {
-  font-size: 0.9rem;
   color: var(--text-muted);
-  margin-bottom: 8px;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
 }
 
 /* =========================
-   PREMIUM MARKET NEWS
+   MARKET NEWS
 ========================= */
 .market-news-box {
   max-width: 950px;
@@ -119,14 +123,13 @@ h1 {
 
   background: var(--card-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 25px 60px rgba(0,0,0,0.5);
 
   text-align: left;
 }
 
 .market-news-box h2 {
-  margin-bottom: 20px;
   text-align: center;
+  margin-bottom: 20px;
 }
 
 .market-news-content {
@@ -140,7 +143,7 @@ h1 {
 }
 
 .market-news-content::-webkit-scrollbar-thumb {
-  background: rgba(34,197,94,0.4);
+  background: rgba(34,197,94,0.35);
   border-radius: 10px;
 }
 
@@ -176,7 +179,7 @@ h1 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 28px;
-  margin-bottom: 45px;
+  margin-bottom: 50px;
 }
 
 .stock-card {
@@ -187,15 +190,15 @@ h1 {
 
   text-align: left;
   cursor: pointer;
+  overflow: hidden;
 
   transition: all 0.35s ease;
-  overflow: hidden;
 }
 
 .stock-card:hover {
   transform: scale(1.07);
-  box-shadow: 0 30px 70px rgba(0,0,0,0.7);
-  z-index: 20;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.65);
+  z-index: 10;
 }
 
 .stock-card h3 {
@@ -339,6 +342,61 @@ button:hover {
 
 .trade-actions .sell {
   background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* =========================
+   FULLSCREEN MODAL (FIXED)
+========================= */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(2,6,23,0.92);
+
+  display: none;
+  justify-content: center;
+  align-items: center;
+
+  z-index: 9999;
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  position: relative;
+
+  width: 85%;
+  max-width: 1000px;
+  height: 70vh;
+
+  background: rgba(15,23,42,0.98);
+  border-radius: 24px;
+  border: 1px solid var(--glass-border);
+
+  padding: 30px;
+
+  box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+}
+
+.modal-content canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 22px;
+  font-size: 22px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: 0.2s ease;
+}
+
+.close-btn:hover {
+  opacity: 1;
+  color: var(--danger);
 }
 
 /* =========================

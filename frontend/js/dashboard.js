@@ -55,7 +55,7 @@ async function loadDefaultStocks() {
         card.querySelector(".mini-signal").textContent = "ERR";
       });
 
-    /* LOAD STOCK NEWS */
+    /* LOAD NEWS */
     fetch(`${API_BASE}/news/${sym}`)
       .then(res => res.json())
       .then(news => {
@@ -86,7 +86,6 @@ async function loadMarketSentiment() {
   try {
     const res = await fetch(`${API_BASE}/market-sentiment`);
     const data = await res.json();
-
     el.textContent = `${data.mood} (${data.value})`;
   } catch {
     el.textContent = "Unavailable";
@@ -94,7 +93,7 @@ async function loadMarketSentiment() {
 }
 
 /* =========================
-   COMMON MARKET NEWS
+   MARKET NEWS
 ========================= */
 async function loadMarketNews() {
   const container = document.getElementById("market-news");
@@ -166,16 +165,18 @@ async function analyzeStock() {
 async function renderMiniChart(canvasId, symbol) {
   try {
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
-    const priceData = await res.json();
+    const rawData = await res.json();
+
+    const data = rawData.filter(p => p.Close && p.Close > 0);
 
     const ctx = document.getElementById(canvasId).getContext("2d");
 
     new Chart(ctx, {
       type: "line",
       data: {
-        labels: priceData.map(p => p.date),
+        labels: data.map(p => p.date),
         datasets: [{
-          data: priceData.map(p => p.Close),
+          data: data.map(p => p.Close),
           borderColor: "#22c55e",
           borderWidth: 2,
           tension: 0.4,
@@ -185,7 +186,6 @@ async function renderMiniChart(canvasId, symbol) {
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 600 },
         plugins: { legend: { display: false } },
         scales: {
           x: { display: false },
@@ -195,7 +195,7 @@ async function renderMiniChart(canvasId, symbol) {
     });
 
   } catch (err) {
-    console.log("Chart error:", err);
+    console.log("Mini chart error:", err);
   }
 }
 
@@ -203,41 +203,71 @@ async function renderMiniChart(canvasId, symbol) {
    EXPANDED CHART MODAL
 ========================= */
 async function expandChart(symbol) {
+
   const modal = document.getElementById("chart-modal");
-  modal.style.display = "flex";
+  modal.classList.add("active");
 
-  const res = await fetch(`${API_BASE}/prices/${symbol}`);
-  const data = await res.json();
+  try {
+    const res = await fetch(`${API_BASE}/prices/${symbol}`);
+    const rawData = await res.json();
+    const data = rawData.filter(p => p.Close && p.Close > 0);
 
-  const ctx = document.getElementById("expanded-chart").getContext("2d");
+    const ctx = document.getElementById("expanded-chart").getContext("2d");
 
-  if (expandedChartInstance) {
-    expandedChartInstance.destroy();
-  }
-
-  expandedChartInstance = new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: data.map(p => p.date),
-      datasets: [{
-        label: symbol + " Price",
-        data: data.map(p => p.Close),
-        borderColor: "#22c55e",
-        borderWidth: 3,
-        tension: 0.3,
-        pointRadius: 0
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true }
-      }
+    if (expandedChartInstance) {
+      expandedChartInstance.destroy();
     }
-  });
+
+    expandedChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: data.map(p => p.date),
+        datasets: [{
+          label: `${symbol} Price`,
+          data: data.map(p => p.Close),
+          borderColor: "#22c55e",
+          borderWidth: 2,
+          tension: 0.25,
+          pointRadius: 2,
+          fill: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+
+        interaction: {
+          mode: "index",
+          intersect: false
+        },
+
+        plugins: {
+          legend: {
+            labels: { color: "#e5e7eb" }
+          },
+          tooltip: {
+            enabled: true
+          }
+        },
+
+        scales: {
+          x: {
+            ticks: { color: "#94a3b8", maxTicksLimit: 8 },
+            grid: { color: "rgba(255,255,255,0.05)" }
+          },
+          y: {
+            ticks: { color: "#94a3b8" },
+            grid: { color: "rgba(255,255,255,0.05)" }
+          }
+        }
+      }
+    });
+
+  } catch (err) {
+    console.log("Expanded chart error:", err);
+  }
 }
 
 function closeModal() {
-  document.getElementById("chart-modal").style.display = "none";
+  document.getElementById("chart-modal").classList.remove("active");
 }
