@@ -34,7 +34,7 @@ def root():
     }
 
 # =========================
-# STOCK ANALYSIS (UPGRADED ENGINE)
+# STOCK ANALYSIS (RISK-AWARE ENGINE)
 # =========================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
@@ -78,16 +78,17 @@ def analyze(symbol: str):
         risk = "Unknown"
 
     # ==========================================
-    # 🔥 IMPROVED SIGNAL LOGIC BY ASSET TYPE
+    # 🔥 RISK-AWARE SIGNAL LOGIC
     # ==========================================
 
-    # Index / Commodity / Crypto → use prediction only
     non_equity_assets = [
         "GC=F", "SI=F", "CL=F",
         "BTC-USD", "ETH-USD"
     ]
 
+    # Index / Commodity / Crypto
     if symbol.startswith("^") or symbol in non_equity_assets:
+
         if prediction > 0.003:
             signal = "BUY"
         elif prediction < -0.003:
@@ -95,22 +96,36 @@ def analyze(symbol: str):
         else:
             signal = "HOLD"
 
-    # Stocks → combine ML + Sentiment
+    # Stocks (Risk-adjusted)
     else:
+
         if prediction > 0.005 and sentiment > 0:
-            signal = "BUY"
+
+            if risk == "High":
+                signal = "SPECULATIVE BUY"
+            else:
+                signal = "BUY"
+
         elif prediction < -0.005 and sentiment < 0:
-            signal = "SELL"
+
+            if risk == "High":
+                signal = "SPECULATIVE SELL"
+            else:
+                signal = "SELL"
+
         else:
             signal = "HOLD"
 
     # ---------- BUY SCORE ----------
     buy_score = normalize_buy_score(prediction, sentiment)
 
-    confidence = min(
-        100,
-        int((abs(prediction) + abs(sentiment)) * 5000)
-    )
+    # ---------- CONFIDENCE (Penalty for High Risk) ----------
+    confidence = int((abs(prediction) + abs(sentiment)) * 5000)
+
+    if risk == "High":
+        confidence = int(confidence * 0.7)
+
+    confidence = min(100, confidence)
 
     return {
         "symbol": symbol,
@@ -123,7 +138,6 @@ def analyze(symbol: str):
         "model_mae": mae
     }
 
-
 # =========================
 # PRICE DATA
 # =========================
@@ -134,7 +148,6 @@ def prices(symbol: str):
         return get_stock_data(symbol) or []
     except:
         return []
-
 
 # =========================
 # NEWS
@@ -147,7 +160,6 @@ def news(symbol: str):
     except:
         return {"headlines": [], "sentiment": 0.0}
 
-
 # =========================
 # MARKET NEWS (US MARKET BASED)
 # =========================
@@ -158,7 +170,6 @@ def market_news():
     except:
         return {"headlines": []}
 
-
 # =========================
 # GLOBAL MARKET SENTIMENT
 # (US + India + Gold + Crypto)
@@ -167,16 +178,9 @@ def market_news():
 def market_sentiment():
 
     symbols = [
-        # US
         "AAPL", "MSFT", "TSLA", "NVDA",
-
-        # India
         "RELIANCE.NS", "HDFCBANK.NS", "INFY.NS",
-
-        # Commodity
         "GC=F",
-
-        # Crypto
         "BTC-USD"
     ]
 
@@ -205,7 +209,6 @@ def market_sentiment():
         "mood": mood
     }
 
-
 # =========================
 # PAPER TRADING
 # =========================
@@ -213,11 +216,9 @@ def market_sentiment():
 def trade(order: Dict):
     return execute_trade(order)
 
-
 @app.get("/portfolio")
 def portfolio():
     return get_portfolio_summary()
-
 
 # =========================
 # CHATBOT
@@ -229,7 +230,6 @@ def chat(data: Dict):
         return {"reply": "Please provide a message."}
 
     return {"reply": chatbot_reply(message)}
-
 
 # =========================
 # BUY SCORE NORMALIZATION
