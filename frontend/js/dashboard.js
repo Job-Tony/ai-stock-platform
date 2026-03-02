@@ -9,27 +9,36 @@ const DEFAULT_STOCKS = [
 
 let expandedChartInstance = null;
 
-/* =========================
+
+/* =====================================================
    LOGO + SYMBOL FORMAT
-========================= */
+===================================================== */
 function getLogo(sym) {
-  const map = {
-    AAPL: "https://logo.clearbit.com/apple.com",
-    MSFT: "https://logo.clearbit.com/microsoft.com",
-    TSLA: "https://logo.clearbit.com/tesla.com",
-    NVDA: "https://logo.clearbit.com/nvidia.com",
-    RELIANCE: "https://logo.clearbit.com/ril.com",
-    TCS: "https://logo.clearbit.com/tcs.com",
 
-    "^BSESN": "https://upload.wikimedia.org/wikipedia/commons/5/5e/BSE_India_logo.svg",
-    "^NSEI": "https://upload.wikimedia.org/wikipedia/commons/7/70/National_Stock_Exchange_of_India_logo.svg",
+  const logoMap = {
 
-    "GC=F": "https://cdn-icons-png.flaticon.com/512/272/272525.png",
-    "SI=F": "https://cdn-icons-png.flaticon.com/512/272/272525.png"
+    // US
+    AAPL: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/apple.svg",
+    MSFT: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/microsoft.svg",
+    TSLA: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tesla.svg",
+    NVDA: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/nvidia.svg",
+
+    // India
+    RELIANCE: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/relianceindustrieslimited.svg",
+    TCS: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tata.svg",
+
+    // Commodities
+    "GC=F": "https://img.icons8.com/color/48/gold-bars.png",
+    "SI=F": "https://img.icons8.com/color/48/silver-bars.png",
+
+    // Indices
+    "^NSEI": "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
+    "^BSESN": "https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
   };
 
   const clean = sym.replace(".NS", "");
-  return map[clean] || "";
+  return logoMap[clean] || 
+         "https://cdn-icons-png.flaticon.com/512/2991/2991148.png";
 }
 
 function formatSymbol(sym) {
@@ -37,25 +46,27 @@ function formatSymbol(sym) {
   if (sym === "^NSEI") return "NIFTY 50";
   if (sym === "GC=F") return "GOLD";
   if (sym === "SI=F") return "SILVER";
-  return sym;
+  return sym.replace(".NS", "");
 }
 
 function safeId(sym) {
   return sym.replace(/[^a-zA-Z0-9]/g, "");
 }
 
-/* =========================
+
+/* =====================================================
    ON LOAD
-========================= */
+===================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   loadDefaultStocks();
   loadMarketSentiment();
   loadMarketNews();
 });
 
-/* =========================
+
+/* =====================================================
    LOAD MARKET OVERVIEW
-========================= */
+===================================================== */
 async function loadDefaultStocks() {
 
   const container = document.getElementById("default-stocks");
@@ -71,7 +82,9 @@ async function loadDefaultStocks() {
 
     card.innerHTML = `
       <div class="card-header">
-        <img src="${getLogo(sym)}" class="stock-logo"/>
+        <img src="${getLogo(sym)}"
+             class="stock-logo"
+             onerror="this.src='https://cdn-icons-png.flaticon.com/512/2991/2991148.png'"/>
         <h3>${formatSymbol(sym)}</h3>
       </div>
 
@@ -95,7 +108,9 @@ async function loadDefaultStocks() {
       .then(res => res.json())
       .then(data => {
         const signalEl = card.querySelector(".mini-signal");
+
         if (!data.signal) throw new Error();
+
         signalEl.textContent = data.signal;
         signalEl.className = "mini-signal " + data.signal;
       })
@@ -109,6 +124,7 @@ async function loadDefaultStocks() {
     fetch(`${API_BASE}/news/${sym}`)
       .then(res => res.json())
       .then(news => {
+
         const newsEl = card.querySelector(".news");
 
         if (!news.headlines || news.headlines.length === 0) {
@@ -127,10 +143,12 @@ async function loadDefaultStocks() {
   }
 }
 
-/* =========================
+
+/* =====================================================
    MARKET SENTIMENT
-========================= */
+===================================================== */
 async function loadMarketSentiment() {
+
   const el = document.getElementById("market-sentiment");
 
   try {
@@ -142,10 +160,12 @@ async function loadMarketSentiment() {
   }
 }
 
-/* =========================
+
+/* =====================================================
    MARKET NEWS
-========================= */
+===================================================== */
 async function loadMarketNews() {
+
   const container = document.getElementById("market-news");
 
   try {
@@ -167,10 +187,12 @@ async function loadMarketNews() {
   }
 }
 
-/* =========================
+
+/* =====================================================
    SEARCH ANALYSIS
-========================= */
+===================================================== */
 async function analyzeStock() {
+
   const symbol = document.getElementById("symbol").value.trim().toUpperCase();
   const output = document.getElementById("output");
 
@@ -209,10 +231,12 @@ async function analyzeStock() {
   }
 }
 
-/* =========================
+
+/* =====================================================
    MINI CHART
-========================= */
+===================================================== */
 async function renderMiniChart(canvasId, symbol) {
+
   try {
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
     const rawData = await res.json();
@@ -236,35 +260,33 @@ async function renderMiniChart(canvasId, symbol) {
         responsive: true,
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
-        scales: {
-          x: { display: false },
-          y: { display: false }
-        }
+        scales: { x: { display: false }, y: { display: false } }
       }
     });
+
   } catch (err) {
     console.log("Mini chart error:", err);
   }
 }
 
-/* =========================
+
+/* =====================================================
    EXPANDED CHART
-========================= */
+===================================================== */
 async function expandChart(symbol) {
 
   const modal = document.getElementById("chart-modal");
   modal.classList.add("active");
 
   try {
+
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
     const rawData = await res.json();
     const data = rawData.filter(p => p.Close && p.Close > 0);
 
     const ctx = document.getElementById("expanded-chart").getContext("2d");
 
-    if (expandedChartInstance) {
-      expandedChartInstance.destroy();
-    }
+    if (expandedChartInstance) expandedChartInstance.destroy();
 
     expandedChartInstance = new Chart(ctx, {
       type: "line",

@@ -63,7 +63,6 @@ body {
 
   backdrop-filter: blur(16px);
   border: 1px solid var(--glass-border);
-
   box-shadow: 0 40px 80px rgba(0,0,0,0.7);
 
   text-align: center;
@@ -190,19 +189,6 @@ h1 {
   height: 100% !important;
 }
 
-.stock-card .expanded-info {
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  transition: all 0.4s ease;
-}
-
-.stock-card:hover .expanded-info {
-  max-height: 300px;
-  opacity: 1;
-  margin-top: 15px;
-}
-
 /* =========================
    SIGNAL COLORS
 ========================= */
@@ -301,7 +287,7 @@ button:hover {
 }
 
 /* =========================
-   MODAL (FULL SCREEN CENTERED)
+   MODAL
 ========================= */
 .modal {
   position: fixed;
@@ -333,22 +319,8 @@ button:hover {
   height: 100% !important;
 }
 
-.close-btn {
-  position: absolute;
-  top: 16px;
-  right: 22px;
-  font-size: 22px;
-  cursor: pointer;
-  opacity: 0.7;
-}
-
-.close-btn:hover {
-  opacity: 1;
-  color: var(--danger);
-}
-
 /* =========================
-   CHATBOT STYLING
+   CHATBOT
 ========================= */
 .chatbot {
   max-width: 800px;
@@ -375,44 +347,18 @@ button:hover {
   line-height: 1.4;
 }
 
-.bot-msg {
-  background: rgba(255,255,255,0.05);
-}
-
+.bot-msg { background: rgba(255,255,255,0.05); }
 .user-msg {
   background: rgba(34,197,94,0.1);
   margin-left: auto;
   text-align: right;
 }
 
-.chat-input {
-  display: flex;
-  gap: 12px;
-}
-
-.chat-input input {
-  flex: 1;
-}
-
 /* =========================
-   RESPONSIVE
+   LANDING PAGE
 ========================= */
-@media (max-width: 768px) {
-  .container { padding: 30px; }
-  .search-box { flex-direction: column; }
-  .market-summary { grid-template-columns: 1fr; }
-  .quick-actions { flex-direction: column; }
-}
+.landing { text-align: center; }
 
-/* =========================
-   LANDING PAGE STYLING
-========================= */
-
-.landing {
-  text-align: center;
-}
-
-/* Hero Buttons */
 .hero-buttons {
   display: flex;
   justify-content: center;
@@ -421,11 +367,6 @@ button:hover {
   margin-bottom: 60px;
 }
 
-.hero-buttons a {
-  text-decoration: none;
-}
-
-/* Features Section */
 .features-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -444,28 +385,17 @@ button:hover {
 
 .feature-card:hover {
   transform: translateY(-8px);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65);
+  box-shadow: 0 30px 70px rgba(0,0,0,0.65);
 }
 
-.feature-card h3 {
-  margin-bottom: 12px;
-}
-
-/* How It Works */
 .how-it-works {
   margin-bottom: 60px;
   padding: 30px;
   border-radius: 22px;
   background: var(--card-bg);
   border: 1px solid var(--glass-border);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
 }
 
-.how-it-works h2 {
-  margin-bottom: 20px;
-}
-
-/* Final CTA */
 .final-cta {
   margin-top: 40px;
   padding: 40px;
@@ -478,29 +408,31 @@ button:hover {
   border: 1px solid var(--accent);
 }
 
-.final-cta h3 {
-  margin-bottom: 20px;
-}
-
-/* Optional subtle glow animation */
-@keyframes pulseGlow {
-  0% { box-shadow: 0 0 0 rgba(34,197,94,0.3); }
-  50% { box-shadow: 0 0 30px rgba(34,197,94,0.4); }
-  100% { box-shadow: 0 0 0 rgba(34,197,94,0.3); }
-}
-
-.final-cta button {
-  animation: pulseGlow 3s infinite;
-}
+/* =========================
+   ENHANCED LOGO SECTION (NEW)
+========================= */
 
 .card-header {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 
+/* Improved logos */
 .stock-logo {
-  width: 28px;
-  height: 28px;
+  width: 34px;
+  height: 34px;
   object-fit: contain;
+  padding: 6px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--glass-border);
+  transition: 0.3s ease;
+}
+
+/* Hover glow */
+.stock-card:hover .stock-logo {
+  transform: scale(1.1);
+  box-shadow: 0 0 15px var(--accent-glow);
 }
