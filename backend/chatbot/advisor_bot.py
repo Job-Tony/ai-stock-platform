@@ -4,16 +4,12 @@ from sentiment.sentiment_analyzer import analyze_sentiment
 from ml.random_forest import predict_trend
 from ml.risk_analyzer import calculate_risk
 
+# Default stocks to scan
+DEFAULT_STOCKS = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"]
 
-def detect_symbol(message: str):
-    """
-    Try to detect stock ticker in message.
-    Supports common US tickers (1–5 uppercase letters).
-    """
-    matches = re.findall(r"\b[A-Z]{1,5}\b", message.upper())
-    if matches:
-        return matches[0]
-    return None
+
+def calculate_score(prediction, sentiment):
+    return prediction * 0.7 + sentiment * 0.3
 
 
 def generate_signal(prediction, sentiment):
@@ -25,82 +21,123 @@ def generate_signal(prediction, sentiment):
         return "HOLD"
 
 
-def chatbot_reply(message: str) -> str:
+def analyze_stock(symbol: str):
+    prices = get_stock_data(symbol)
+    if not prices:
+        return None
 
-    message = message.strip().upper()
+    prediction, _ = predict_trend(prices)
+    sentiment = analyze_sentiment(symbol)
+    risk = calculate_risk(prices)
 
-    # Detect ticker
-    symbol = detect_symbol(message)
+    score = calculate_score(prediction, sentiment)
+    signal = generate_signal(prediction, sentiment)
 
-    if symbol:
+    return {
+        "symbol": symbol,
+        "prediction": prediction,
+        "sentiment": sentiment,
+        "risk": risk,
+        "score": score,
+        "signal": signal
+    }
 
-        prices = get_stock_data(symbol)
 
-        if not prices:
-            return f"❌ No data available for {symbol}. Try a valid ticker."
+def chatbot_reply(message: str):
 
-        prediction, _ = predict_trend(prices)
-        sentiment = analyze_sentiment(symbol)
-        risk = calculate_risk(prices)
+    message_upper = message.upper()
 
-        signal = generate_signal(prediction, sentiment)
+    # =====================================
+    # 1️⃣ If user asked about specific symbol
+    # =====================================
+    match = re.findall(r"\b[A-Z]{1,5}\b", message_upper)
+    if match:
+        symbol = match[0]
+        result = analyze_stock(symbol)
 
-        buy_score = int(((prediction * 0.7 + sentiment * 0.3) + 0.05) / 0.10 * 100)
-        buy_score = max(0, min(100, buy_score))
+        if not result:
+            return f"❌ No data available for {symbol}"
 
         return f"""
 📊 {symbol} Analysis
 
-Prediction Trend: {round(prediction,4)}
-Sentiment Score: {round(sentiment,3)}
-Risk Level: {risk}
-Buy Score: {buy_score}/100
+Prediction: {round(result['prediction'],4)}
+Sentiment: {round(result['sentiment'],3)}
+Risk: {result['risk']}
 
-👉 Recommendation: {signal}
-        """
+👉 Recommendation: {result['signal']}
+"""
 
-    # If asking which stock to buy
-    if "WHICH STOCK" in message or "BEST STOCK" in message:
+    # =====================================
+    # 2️⃣ If user asked WHICH STOCK TO BUY
+    # =====================================
+    if "BUY" in message_upper or "BEST STOCK" in message_upper:
 
-        top_candidates = ["AAPL", "MSFT", "TSLA", "NVDA"]
-
-        best_symbol = None
-        best_score = -1
-
-        for sym in top_candidates:
+        results = []
+        for sym in DEFAULT_STOCKS:
             try:
-                prices = get_stock_data(sym)
-                prediction, _ = predict_trend(prices)
-                sentiment = analyze_sentiment(sym)
-
-                score = prediction * 0.7 + sentiment * 0.3
-
-                if score > best_score:
-                    best_score = score
-                    best_symbol = sym
+                res = analyze_stock(sym)
+                if res:
+                    results.append(res)
             except:
                 continue
 
-        if best_symbol:
-            return f"""
-🔥 Based on current AI analysis:
+        # sort highest score first
+        results.sort(key=lambda x: x["score"], reverse=True)
 
-👉 {best_symbol} looks strongest right now.
+        best = results[0]
 
-Type:
-• 'Analyze {best_symbol}'
-to see full breakdown.
-            """
+        return f"""
+🔥 BEST STOCK TO BUY RIGHT NOW:
 
-        return "Unable to determine best stock right now."
+👉 {best['symbol']}
 
-    # Default fallback
+Prediction: {round(best['prediction'],4)}
+Sentiment: {round(best['sentiment'],3)}
+Risk: {best['risk']}
+
+Strongest combined AI score among tracked stocks.
+"""
+
+    # =====================================
+    # 3️⃣ If user asked WHICH TO SELL
+    # =====================================
+    if "SELL" in message_upper:
+
+        results = []
+        for sym in DEFAULT_STOCKS:
+            try:
+                res = analyze_stock(sym)
+                if res:
+                    results.append(res)
+            except:
+                continue
+
+        # sort lowest score first
+        results.sort(key=lambda x: x["score"])
+
+        worst = results[0]
+
+        return f"""
+⚠️ STOCK TO CONSIDER SELLING:
+
+👉 {worst['symbol']}
+
+Prediction: {round(worst['prediction'],4)}
+Sentiment: {round(worst['sentiment'],3)}
+Risk: {worst['risk']}
+
+Weakest AI score among tracked stocks.
+"""
+
+    # =====================================
+    # 4️⃣ Default fallback
+    # =====================================
     return """
-I can analyze any stock for you 📈
+Ask me something like:
 
-Try:
-• 'Is AAPL a good buy?'
-• 'Analyze TSLA'
-• 'Should I sell NVDA?'
-• 'Risk level of MSFT?'
+• Which stock should I buy right now?
+• Which stock should I sell?
+• Analyze TSLA
+• Is AAPL a good buy?
 """
