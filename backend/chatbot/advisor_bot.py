@@ -1,77 +1,61 @@
-# backend/chatbot/advisor_bot.py
+import re
+from data.fetch_prices import get_stock_data
+from sentiment.sentiment_analyzer import analyze_sentiment
+from ml.random_forest import predict_trend
+from ml.risk_analyzer import calculate_risk
+
 
 def chatbot_reply(message: str) -> str:
-    """
-    Context-aware AI stock advisor chatbot (rule-based, expandable)
-    """
 
-    msg = message.lower()
+    message = message.upper()
 
-    # BUY / SELL
-    if "buy" in msg:
+    # Try detect stock symbol (simple detection)
+    symbols = ["AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL"]
+
+    for sym in symbols:
+        if sym in message:
+            prices = get_stock_data(sym)
+
+            if not prices:
+                return f"No data available for {sym}."
+
+            prediction, _ = predict_trend(prices)
+            sentiment = analyze_sentiment(sym)
+            risk = calculate_risk(prices)
+
+            if prediction > 0.005 and sentiment > 0:
+                signal = "BUY"
+            elif prediction < -0.005 and sentiment < 0:
+                signal = "SELL"
+            else:
+                signal = "HOLD"
+
+            return (
+                f"📊 {sym} Analysis:\n\n"
+                f"• Predicted Trend: {round(prediction,4)}\n"
+                f"• Sentiment Score: {round(sentiment,3)}\n"
+                f"• Risk Level: {risk}\n\n"
+                f"👉 Current Recommendation: {signal}"
+            )
+
+    # If no symbol detected
+    if "BEST STOCK" in message or "WHICH STOCK" in message:
+
         return (
-            "Buying a stock is generally considered when:\n"
-            "• Trend is upward\n"
-            "• Sentiment is positive\n"
-            "• Buy score is high\n\n"
-            "Check the dashboard for AI-based confirmation before deciding."
+            "I recommend checking the dashboard 🔥\n\n"
+            "Look for stocks with:\n"
+            "• BUY signal\n"
+            "• Buy score above 70\n"
+            "• Positive sentiment\n"
+            "• Moderate/Low risk\n\n"
+            "You can ask about a specific symbol like:\n"
+            "👉 'Is TSLA a good buy?'"
         )
 
-    if "sell" in msg:
-        return (
-            "Selling may be considered when:\n"
-            "• Trend weakens\n"
-            "• Sentiment turns negative\n"
-            "• Price hits resistance or target\n\n"
-            "Risk management is more important than profit."
-        )
-
-    # RISK
-    if "risk" in msg or "safe" in msg:
-        return (
-            "All stocks carry risk. To reduce it:\n"
-            "• Diversify across sectors\n"
-            "• Avoid overexposure to a single stock\n"
-            "• Use stop-losses\n"
-            "• Don’t invest money you can’t afford to lose"
-        )
-
-    # LONG TERM
-    if "long term" in msg or "invest" in msg:
-        return (
-            "For long-term investing:\n"
-            "• Focus on strong fundamentals\n"
-            "• Ignore short-term noise\n"
-            "• Review quarterly performance\n"
-            "• Stay consistent and patient"
-        )
-
-    # SHORT TERM / TRADING
-    if "short term" in msg or "trading" in msg:
-        return (
-            "Short-term trading relies on:\n"
-            "• Momentum\n"
-            "• Volume\n"
-            "• Sentiment shifts\n"
-            "• Technical indicators\n\n"
-            "Paper trade first before risking capital."
-        )
-
-    # BEST STOCK
-    if "best stock" in msg or "recommend" in msg:
-        return (
-            "I can’t name a single 'best' stock, but you can:\n"
-            "• Use the dashboard to compare buy scores\n"
-            "• Look for strong trend + sentiment\n"
-            "• Avoid hype-driven decisions"
-        )
-
-    # DEFAULT SMART RESPONSE
     return (
-        "I can help you with:\n"
-        "• Buy / Sell decisions\n"
-        "• Risk management\n"
-        "• Long-term vs short-term strategy\n"
-        "• Market behavior\n\n"
-        "Try asking something more specific 🙂"
+        "I can analyze specific stocks for you.\n"
+        "Try asking:\n"
+        "• 'Is AAPL a good buy?'\n"
+        "• 'Should I sell TSLA?'\n"
+        "• 'Risk level of NVDA?'\n"
     )
