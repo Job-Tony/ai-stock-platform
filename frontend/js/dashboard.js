@@ -4,20 +4,18 @@ const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
    MASTER ASSET LIST (ALL MARKETS)
 =========================================== */
 const DEFAULT_STOCKS = [
-
   // 🇺🇸 US
-  "AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL",
+  "AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL",
 
   // 🇮🇳 India
   "RELIANCE.NS", "TCS.NS",
   "HDFCBANK.NS", "INFY.NS",
-  "ICICIBANK.NS", "ADANIENT.NS",
 
   // 📊 Indices
-  "^NSEI", "^BSESN", "^NSEBANK",
+  "^NSEI", "^BSESN",
 
-  // 🥇 Commodities
-  "GC=F", "SI=F", "CL=F",
+  // 🥇 Gold
+  "GC=F",
 
   // 🪙 Crypto
   "BTC-USD", "ETH-USD"
