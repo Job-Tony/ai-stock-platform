@@ -27,6 +27,36 @@ const DEFAULT_STOCKS = [
 
 let expandedChartInstance = null;
 
+/* =====================================================
+   SYMBOL NORMALIZATION (Friendly → Yahoo Format)
+===================================================== */
+function normalizeSymbol(symbol) {
+
+  const map = {
+
+    // 📊 Indices
+    "SENSEX": "^BSESN",
+    "BSESN": "^BSESN",
+    "NIFTY": "^NSEI",
+    "NIFTY 50": "^NSEI",
+    "BANK NIFTY": "^NSEBANK",
+
+    // 🥇 Commodities
+    "GOLD": "GC=F",
+    "SILVER": "SI=F",
+    "CRUDE": "CL=F",
+    "CRUDE OIL": "CL=F",
+    "OIL": "CL=F",
+
+    // 🪙 Crypto
+    "BITCOIN": "BTC-USD",
+    "BTC": "BTC-USD",
+    "ETHEREUM": "ETH-USD",
+    "ETH": "ETH-USD"
+  };
+
+  return map[symbol] || symbol;
+}
 
 /* =====================================================
    LOGO + SYMBOL FORMAT
@@ -329,7 +359,8 @@ async function analyzeStock() {
     return;
   }
 
-  const symbol = symbolInput.value.trim().toUpperCase();
+  let symbol = symbolInput.value.trim().toUpperCase();
+  symbol = normalizeSymbol(symbol);
 
   if (!symbol) {
     output.innerHTML = "Please enter a symbol.";
