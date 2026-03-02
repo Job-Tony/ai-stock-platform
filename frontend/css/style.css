@@ -574,3 +574,127 @@ button + button {
   line-height: 1.5;
   color: var(--text-muted);
 }
+
+/* =========================================
+   ADDITIONAL IMPROVEMENTS (APPENDED ONLY)
+   — DOES NOT MODIFY OLD STRUCTURE —
+========================================= */
+
+/* -------------------------------
+   1. Better Button Alignment
+-------------------------------- */
+
+/* Ensure all buttons center content perfectly */
+button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+}
+
+/* Match search button height with input */
+.search-box {
+  align-items: center;
+}
+
+.search-box input,
+.search-box button {
+  height: 48px;
+}
+
+
+/* -------------------------------
+   2. Improve Quick Action Cards
+-------------------------------- */
+
+.quick-actions {
+  align-items: stretch;
+}
+
+.quick-actions a {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-width: 180px;
+  min-height: 90px;
+  text-align: center;
+  font-size: 1rem;
+}
+
+.quick-actions a:hover {
+  transform: translateY(-8px) scale(1.02);
+}
+
+
+/* -------------------------------
+   3. Improve Hero Buttons Alignment
+-------------------------------- */
+
+.hero-buttons {
+  align-items: center;
+}
+
+.hero-buttons a button {
+  min-width: 180px;
+}
+
+
+/* -------------------------------
+   4. Improve Close Button Position
+-------------------------------- */
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+/* -------------------------------
+   5. Hover-Only News Reveal
+-------------------------------- */
+
+/* Make card positioned */
+.stock-card {
+  position: relative;
+  overflow: hidden;
+}
+
+/* Hide news initially */
+.stock-card .expanded-info {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+
+  background: rgba(15, 23, 42, 0.98);
+  backdrop-filter: blur(10px);
+
+  padding: 18px;
+  border-top: 1px solid var(--glass-border);
+
+  transform: translateY(100%);
+  opacity: 0;
+  transition: all 0.35s ease;
+}
+
+/* Show on hover */
+.stock-card:hover .expanded-info {
+  transform: translateY(0%);
+  opacity: 1;
+}
+
+/* Slight chart dim when hovering */
+.stock-card:hover .mini-chart {
+  filter: blur(2px) brightness(0.8);
+  transition: 0.3s ease;
+}
+
+/* Improve news text styling */
+.expanded-info .news {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
