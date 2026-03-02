@@ -34,13 +34,14 @@ def root():
     }
 
 # =========================
-# STOCK ANALYSIS (SAFE & UPGRADED)
+# STOCK ANALYSIS (UPGRADED ENGINE)
 # =========================
 @app.get("/analyze/{symbol}")
 def analyze(symbol: str):
 
     symbol = symbol.upper()
 
+    # ---------- FETCH PRICE DATA ----------
     try:
         prices = get_stock_data(symbol)
     except:
@@ -58,31 +59,43 @@ def analyze(symbol: str):
             "model_mae": 0
         }
 
+    # ---------- PREDICTION ----------
     try:
         prediction, mae = predict_trend(prices)
     except:
         prediction, mae = 0, 0
 
+    # ---------- SENTIMENT ----------
     try:
         sentiment = analyze_sentiment(symbol)
     except:
         sentiment = 0
 
+    # ---------- RISK ----------
     try:
         risk = calculate_risk(prices)
     except:
         risk = "Unknown"
 
-    # 🔥 Improved Signal Logic
+    # ==========================================
+    # 🔥 IMPROVED SIGNAL LOGIC BY ASSET TYPE
+    # ==========================================
 
-    # If Index or Commodity → use prediction only
-    if symbol.startswith("^") or symbol in ["GC=F", "SI=F"]:
+    # Index / Commodity / Crypto → use prediction only
+    non_equity_assets = [
+        "GC=F", "SI=F", "CL=F",
+        "BTC-USD", "ETH-USD"
+    ]
+
+    if symbol.startswith("^") or symbol in non_equity_assets:
         if prediction > 0.003:
             signal = "BUY"
         elif prediction < -0.003:
             signal = "SELL"
         else:
             signal = "HOLD"
+
+    # Stocks → combine ML + Sentiment
     else:
         if prediction > 0.005 and sentiment > 0:
             signal = "BUY"
@@ -91,6 +104,7 @@ def analyze(symbol: str):
         else:
             signal = "HOLD"
 
+    # ---------- BUY SCORE ----------
     buy_score = normalize_buy_score(prediction, sentiment)
 
     confidence = min(
@@ -135,7 +149,7 @@ def news(symbol: str):
 
 
 # =========================
-# MARKET NEWS
+# MARKET NEWS (US MARKET BASED)
 # =========================
 @app.get("/market-news")
 def market_news():
@@ -146,15 +160,24 @@ def market_news():
 
 
 # =========================
-# MARKET SENTIMENT (INCLUDES INDIA + GOLD)
+# GLOBAL MARKET SENTIMENT
+# (US + India + Gold + Crypto)
 # =========================
 @app.get("/market-sentiment")
 def market_sentiment():
 
     symbols = [
+        # US
         "AAPL", "MSFT", "TSLA", "NVDA",
-        "RELIANCE.NS", "TCS.NS",
-        "GC=F"
+
+        # India
+        "RELIANCE.NS", "HDFCBANK.NS", "INFY.NS",
+
+        # Commodity
+        "GC=F",
+
+        # Crypto
+        "BTC-USD"
     ]
 
     sentiments = []
@@ -209,7 +232,7 @@ def chat(data: Dict):
 
 
 # =========================
-# BUY SCORE
+# BUY SCORE NORMALIZATION
 # =========================
 def normalize_buy_score(prediction: float, sentiment: float) -> int:
     score = (prediction * 0.7) + (sentiment * 0.3)

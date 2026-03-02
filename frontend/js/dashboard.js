@@ -1,10 +1,26 @@
 const API_BASE = "https://ai-stock-platform-zpkg.onrender.com";
 
+/* ===========================================
+   MASTER ASSET LIST (ALL MARKETS)
+=========================================== */
 const DEFAULT_STOCKS = [
-  "AAPL", "MSFT", "TSLA", "NVDA",
+
+  // 🇺🇸 US
+  "AAPL", "MSFT", "TSLA", "NVDA", "AMZN", "GOOGL",
+
+  // 🇮🇳 India
   "RELIANCE.NS", "TCS.NS",
-  "GC=F", "SI=F",
-  "^NSEI", "^BSESN"
+  "HDFCBANK.NS", "INFY.NS",
+  "ICICIBANK.NS", "ADANIENT.NS",
+
+  // 📊 Indices
+  "^NSEI", "^BSESN", "^NSEBANK",
+
+  // 🥇 Commodities
+  "GC=F", "SI=F", "CL=F",
+
+  // 🪙 Crypto
+  "BTC-USD", "ETH-USD"
 ];
 
 let expandedChartInstance = null;
@@ -17,37 +33,62 @@ function getLogo(sym) {
 
   const logoMap = {
 
-    // US
+    // 🇺🇸 US
     AAPL: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/apple.svg",
     MSFT: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/microsoft.svg",
     TSLA: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tesla.svg",
     NVDA: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/nvidia.svg",
+    AMZN: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/amazon.svg",
+    GOOGL: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/google.svg",
 
-    // India
+    // 🇮🇳 India
     RELIANCE: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/relianceindustrieslimited.svg",
     TCS: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tata.svg",
+    HDFCBANK: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/hdfcbank.svg",
+    INFY: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/infosys.svg",
+    ICICIBANK: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/icicibank.svg",
+    ADANIENT: "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/adani.svg",
 
-    // Commodities
+    // 🥇 Commodities
     "GC=F": "https://img.icons8.com/color/48/gold-bars.png",
     "SI=F": "https://img.icons8.com/color/48/silver-bars.png",
+    "CL=F": "https://img.icons8.com/color/48/oil-industry.png",
 
-    // Indices
+    // 🪙 Crypto
+    "BTC-USD": "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/bitcoin.svg",
+    "ETH-USD": "https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/ethereum.svg",
+
+    // 📊 Indices
     "^NSEI": "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
-    "^BSESN": "https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
+    "^BSESN": "https://cdn-icons-png.flaticon.com/512/2991/2991148.png",
+    "^NSEBANK": "https://cdn-icons-png.flaticon.com/512/2991/2991148.png"
   };
 
   const clean = sym.replace(".NS", "");
-  return logoMap[clean] || 
-         "https://cdn-icons-png.flaticon.com/512/2991/2991148.png";
+  return logoMap[clean] ||
+    "https://cdn-icons-png.flaticon.com/512/2991/2991148.png";
 }
 
+
+/* =====================================================
+   FRIENDLY NAME FORMAT
+===================================================== */
 function formatSymbol(sym) {
-  if (sym === "^BSESN") return "SENSEX";
-  if (sym === "^NSEI") return "NIFTY 50";
-  if (sym === "GC=F") return "GOLD";
-  if (sym === "SI=F") return "SILVER";
-  return sym.replace(".NS", "");
+
+  const map = {
+    "^BSESN": "SENSEX",
+    "^NSEI": "NIFTY 50",
+    "^NSEBANK": "BANK NIFTY",
+    "GC=F": "GOLD",
+    "SI=F": "SILVER",
+    "CL=F": "CRUDE OIL",
+    "BTC-USD": "BITCOIN",
+    "ETH-USD": "ETHEREUM"
+  };
+
+  return map[sym] || sym.replace(".NS", "");
 }
+
 
 function safeId(sym) {
   return sym.replace(/[^a-zA-Z0-9]/g, "");
@@ -65,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 /* =====================================================
-   LOAD MARKET OVERVIEW
+   LOAD MARKET GRID
 ===================================================== */
 async function loadDefaultStocks() {
 
@@ -103,16 +144,13 @@ async function loadDefaultStocks() {
 
     renderMiniChart(`chart-${id}`, sym);
 
-    /* LOAD SIGNAL */
+    /* ---------- LOAD SIGNAL ---------- */
     fetch(`${API_BASE}/analyze/${sym}`)
       .then(res => res.json())
       .then(data => {
         const signalEl = card.querySelector(".mini-signal");
-
-        if (!data.signal) throw new Error();
-
-        signalEl.textContent = data.signal;
-        signalEl.className = "mini-signal " + data.signal;
+        signalEl.textContent = data.signal || "HOLD";
+        signalEl.className = "mini-signal " + (data.signal || "HOLD");
       })
       .catch(() => {
         const signalEl = card.querySelector(".mini-signal");
@@ -120,11 +158,10 @@ async function loadDefaultStocks() {
         signalEl.className = "mini-signal HOLD";
       });
 
-    /* LOAD NEWS */
+    /* ---------- LOAD NEWS ---------- */
     fetch(`${API_BASE}/news/${sym}`)
       .then(res => res.json())
       .then(news => {
-
         const newsEl = card.querySelector(".news");
 
         if (!news.headlines || news.headlines.length === 0) {
@@ -148,7 +185,6 @@ async function loadDefaultStocks() {
    MARKET SENTIMENT
 ===================================================== */
 async function loadMarketSentiment() {
-
   const el = document.getElementById("market-sentiment");
 
   try {
@@ -165,7 +201,6 @@ async function loadMarketSentiment() {
    MARKET NEWS
 ===================================================== */
 async function loadMarketNews() {
-
   const container = document.getElementById("market-news");
 
   try {
@@ -184,50 +219,6 @@ async function loadMarketNews() {
 
   } catch {
     container.textContent = "News unavailable.";
-  }
-}
-
-
-/* =====================================================
-   SEARCH ANALYSIS
-===================================================== */
-async function analyzeStock() {
-
-  const symbol = document.getElementById("symbol").value.trim().toUpperCase();
-  const output = document.getElementById("output");
-
-  if (!symbol) {
-    output.innerHTML = "Please enter a symbol";
-    return;
-  }
-
-  output.innerHTML = `<div class="loading"></div>`;
-
-  try {
-    const res = await fetch(`${API_BASE}/analyze/${symbol}`);
-    const data = await res.json();
-
-    let recommendation =
-      data.buy_score >= 75 ? "STRONG BUY" :
-      data.buy_score >= 60 ? "BUY" :
-      data.buy_score >= 45 ? "HOLD" : "SELL";
-
-    const recClass = recommendation.replace(" ", "-");
-
-    output.innerHTML = `
-      <h3>${symbol}</h3>
-      <p><b>Prediction:</b> ${Number(data.prediction).toFixed(4)}</p>
-      <p><b>Sentiment:</b> ${Number(data.sentiment).toFixed(3)}</p>
-      <p><b>Risk Level:</b> ${data.risk_level}</p>
-      <p><b>Model MAE:</b> ${data.model_mae}</p>
-      <p><b>Buy Score:</b> ${data.buy_score}</p>
-      <h2 class="rec ${recClass}">${recommendation}</h2>
-    `;
-
-    renderMeter(data.buy_score);
-
-  } catch {
-    output.innerHTML = "Error fetching data";
   }
 }
 
@@ -252,7 +243,7 @@ async function renderMiniChart(canvasId, symbol) {
           data: data.map(p => p.Close),
           borderColor: "#22c55e",
           borderWidth: 2,
-          tension: 0.4,
+          tension: 0.35,
           pointRadius: 0
         }]
       },
@@ -279,7 +270,6 @@ async function expandChart(symbol) {
   modal.classList.add("active");
 
   try {
-
     const res = await fetch(`${API_BASE}/prices/${symbol}`);
     const rawData = await res.json();
     const data = rawData.filter(p => p.Close && p.Close > 0);
@@ -297,7 +287,7 @@ async function expandChart(symbol) {
           data: data.map(p => p.Close),
           borderColor: "#22c55e",
           borderWidth: 2,
-          tension: 0.3,
+          tension: 0.25,
           pointRadius: 2
         }]
       },
